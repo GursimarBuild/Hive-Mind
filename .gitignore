@@ -1,0 +1,17 @@
+/.DS_Store
+/.mypy_cache
+/.pytest_cache
+/.venv
+/.vscode
+/README_SETUP.txt
+/Worksheet
+/assignments
+/csc110-vscode.code-profile
+/lectures
+/miscellaneous
+/practice
+/problem_sets
+/requirements.txt
+/vscode-extensions.txt
+/vscode-settings-fallback.json
+/welcome.py

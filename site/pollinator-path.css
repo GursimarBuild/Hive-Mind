@@ -1,0 +1,67 @@
+:root{--ink:#18291a;--cream:#f8f0d6;--yellow:#ffc72e;--line:#21351b26}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Outfit,system-ui}main{max-width:1480px;margin:auto;padding:0 5vw}header{height:84px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;font:10px 'DM Mono';letter-spacing:.12em;color:#637059}.brand{text-decoration:none;color:var(--ink);font:800 15px Outfit;letter-spacing:.1em}.brand i{display:inline-block;width:13px;height:9px;border-radius:100% 30%;background:var(--yellow);margin-right:8px;transform:rotate(-20deg)}header button{height:27px;width:27px;border:1px solid #324e29;background:transparent;border-radius:50%;color:#233c1c;cursor:pointer}.intro{padding:72px 0 43px;display:grid;grid-template-columns:1.2fr .8fr;align-items:end}.intro p,.guide p{grid-column:1/-1;margin:0 0 15px;color:#5a8739;font:10px 'DM Mono';letter-spacing:.13em}.intro h1{font-size:clamp(57px,9vw,135px);line-height:.8;letter-spacing:-.08em;margin:0}.intro h1 em,.guide em{font-style:normal;color:#78a44d}.intro div{max-width:350px;padding-bottom:3px}.intro div span{display:block;color:#55624c;line-height:1.5}.intro button,.overlay button{margin-top:22px;border:0;padding:15px 18px;background:var(--yellow);font:800 11px Outfit;letter-spacing:.08em;color:#172813;cursor:pointer}.game-shell{height:min(62vw,700px);min-height:480px;position:relative;overflow:hidden;border:1px solid #1c351a44;background:#8ebc6d;box-shadow:0 25px 50px #34431f30}canvas{width:100%;height:100%;display:block;cursor:crosshair}.hud{position:absolute;z-index:2;left:26px;right:26px;display:flex;justify-content:space-between;pointer-events:none;font-family:'DM Mono'}.hud.top{top:23px}.hud.bottom{bottom:22px;align-items:end}.hud small{display:block;font-size:9px;letter-spacing:.1em;color:#18361c}.meter{width:185px;height:9px;margin-top:7px;border:1px solid #17301980;background:#e5efce99;padding:1px}.meter i{display:block;width:100%;height:100%;background:#ffc82e;transition:width .2s}.hud.top>div>b{display:block;margin-top:6px;font-size:10px}.wave{text-align:center}.wave b{font-size:14px;color:#234f29}.pollen{text-align:right}.pollen b{display:block;font-size:24px;color:#17361c;margin-top:2px}.pollen i{font-style:normal;color:#ffc72e;font-size:17px}.egg-panel{position:absolute;z-index:3;left:26px;top:91px;width:250px;background:#f9f1d9ee;border:1px solid #24451e55;padding:10px;box-shadow:0 8px 20px #183b1d22}.egg-panel p{font:9px 'DM Mono';letter-spacing:.1em;color:#54784a;margin:2px 4px 8px}.egg-panel button{width:100%;border:1px solid transparent;background:transparent;display:flex;align-items:center;gap:8px;padding:8px 5px;text-align:left;color:var(--ink);cursor:pointer}.egg-panel button:hover,.egg-panel button.selected{background:#e0edc9;border-color:#6e9e57}.egg-panel button i{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#f7bf2e;font-style:normal;font-size:15px}.egg-panel button:nth-of-type(3) i{background:#a8d9ed}.egg-panel button:nth-of-type(4) i{background:#f8a9bf}.egg-panel button span{display:flex;flex:1;flex-direction:column}.egg-panel button b{font:700 10px 'DM Mono';letter-spacing:.03em}.egg-panel button small{font-size:10px;color:#52654b;margin-top:2px}.egg-panel button em{font:700 11px 'DM Mono';font-style:normal;color:#5b7e36}.hud.bottom #message{display:flex;flex-direction:column;gap:4px;max-width:410px;text-shadow:0 1px #e7f5cd}.hud.bottom #message b{font:700 10px 'DM Mono';letter-spacing:.08em}.hud.bottom #message span{font-size:13px}.hint{text-align:right;font:8px/1.7 'DM Mono';letter-spacing:.04em;color:#1c3a1a}.hint b{color:#f7f5d4;background:#2f5a2c;padding:2px 4px}.overlay{position:absolute;z-index:5;inset:0;display:grid;place-items:center;text-align:center;background:#16331bd9;color:#fbf5d9;transition:opacity .35s}.overlay>div{max-width:510px;padding:35px}.overlay p{font:10px 'DM Mono';letter-spacing:.14em;color:#f9cb33}.overlay h2{font-size:clamp(48px,7vw,100px);letter-spacing:-.08em;line-height:.82;margin:14px 0 22px}.overlay h2 em{font-style:normal;color:#ffd43e}.overlay span{display:block;line-height:1.5;color:#d5e1c4}.overlay.hidden{opacity:0;pointer-events:none}.result{display:none}.result.show{display:grid}.guide{padding:90px 0;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:4vw;border-bottom:1px solid var(--line)}.guide h2{font-size:clamp(40px,5vw,73px);line-height:.86;letter-spacing:-.065em;margin:0}.guide>div:not(:first-child){border-top:2px solid #6d9a45;padding-top:17px;align-self:end}.guide b{display:block;font:700 11px 'DM Mono';letter-spacing:.07em;color:#426d32}.guide span{display:block;max-width:170px;margin-top:12px;color:#58654f;line-height:1.35}footer{padding:24px 5vw;color:#6c7964;font:8px 'DM Mono';letter-spacing:.06em}@media(max-width:700px){main{padding:0 20px}header span{display:none}.intro{grid-template-columns:1fr;gap:28px;padding-top:52px}.game-shell{height:140vw;min-height:520px}.hud{left:14px;right:14px}.hud.top{top:14px}.hud.bottom{bottom:14px}.meter{width:105px}.wave{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap}.wave small{font-size:7px}.wave b{font-size:10px}.egg-panel{top:73px;left:14px;width:207px;padding:6px}.egg-panel button{padding:5px}.egg-panel button i{width:25px;height:25px}.egg-panel button small{font-size:8px}.egg-panel button b{font-size:8px}.egg-panel p{font-size:7px;margin-bottom:3px}.hint{display:none}.guide{grid-template-columns:1fr 1fr;gap:35px 20px;padding:58px 0}.guide>div:first-child{grid-column:1/-1}.guide h2{font-size:48px}footer{padding:20px;font-size:7px}}
+.cutscene{position:absolute;z-index:7;inset:0;display:none;place-items:center;padding:22px;background:linear-gradient(145deg,#132d25f2,#182c21f5 62%,#392f22f2);color:#fbf5d9;text-align:center}.cutscene.show{display:grid;animation:sceneIn .8s ease both}.cutscene-card{width:min(640px,100%);padding:20px 34px 28px}.cutscene-art{height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;margin-bottom:18px;border:1px solid #f8e3a32a;background:radial-gradient(ellipse at center,#74934c45,transparent 68%);overflow:hidden}.cutscene-art span{font-size:clamp(34px,7vw,64px);letter-spacing:.03em;filter:drop-shadow(0 5px 8px #101a1470);animation:floatArt 3s ease-in-out infinite}.cutscene-art small{font:9px 'DM Mono';letter-spacing:.16em;color:#d4c990}.cutscene-card>p{margin:0;color:#f9cb33;font:10px 'DM Mono';letter-spacing:.14em}.cutscene-card h2{font-size:clamp(38px,6vw,70px);letter-spacing:-.07em;line-height:.9;margin:15px 0}.cutscene-card h2 em{font-style:normal;color:#f6c949}.cutscene-card>span{display:block;max-width:510px;margin:0 auto;color:#d5e1c4;line-height:1.55}.cutscene-progress{height:3px;max-width:280px;margin:24px auto 0;background:#ffffff25}.cutscene-progress i{display:block;width:33.333%;height:100%;background:#ffc72e;transition:width .35s}.cutscene-card button{margin-top:20px;border:0;padding:14px 20px;background:var(--yellow);font:800 11px Outfit;letter-spacing:.08em;color:#172813;cursor:pointer}.cutscene-card button:hover{background:#ffda66}@keyframes floatArt{50%{transform:translateY(-7px)}}@keyframes sceneIn{from{opacity:0}to{opacity:1}}@media(max-width:700px){.cutscene{padding:12px}.cutscene-card{padding:12px}.cutscene-art{height:150px;margin-bottom:12px}.cutscene-card h2{font-size:clamp(36px,10vw,56px)}}
+/* Clear, readable HUD over the illustrated top-down garden. */
+.hud.top>div{padding:10px 13px;border:1px solid #203b1c55;border-radius:10px;background:#fff8dfed;box-shadow:0 4px 14px #172c1b42;color:#18291a;text-shadow:none;backdrop-filter:blur(4px)}
+.hud.top small{color:#29472b;font-weight:500}
+.hud.top>div>b{color:#1d351f}
+.hud.bottom #message{padding:11px 14px;border:1px solid #fff8dc;border-radius:10px;background:#fff8e9ed;box-shadow:0 4px 16px #172c1b40;text-shadow:none;color:#172a19;backdrop-filter:blur(4px)}
+.hud.bottom #message b,.hud.bottom #message span{color:#172a19}
+.hint{padding:9px 12px;border:1px solid #ffffff88;border-radius:9px;background:#19351de8;color:#fff9e6;text-shadow:0 1px 2px #0008;box-shadow:0 4px 14px #172c1b40}
+.hint b{color:#fff3b9;background:transparent;padding:0}
+.egg-panel{background:#fff8eaf5;box-shadow:0 8px 22px #172c1b42;backdrop-filter:blur(5px)}
+.egg-panel button{transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.egg-panel button:hover{transform:translateX(3px)}
+.intro button,.overlay button,.cutscene-card button{transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.intro button:hover,.overlay button:hover,.cutscene-card button:hover{transform:translateY(-2px);box-shadow:0 7px 16px #172c1b30}
+@media(max-width:700px){.hud.top>div{padding:7px 8px;border-radius:8px}.hud.top>div>b{font-size:9px}.hud.bottom #message{max-width:min(78vw,410px);padding:9px 10px}.hud.bottom #message span{font-size:11px}}
+/* Compact overlays give the garden more visible play space. */
+.game-shell{height:min(76vw,900px);min-height:640px}
+.hud{left:16px;right:16px}
+.hud.top{top:14px}
+.hud.bottom{bottom:14px}
+.hud.top>div{padding:6px 9px;border-radius:8px}
+.hud.top small{font-size:8px}
+.hud.top>div>b{margin-top:3px;font-size:9px}
+.meter{width:145px;height:7px;margin-top:4px}
+.pollen b{font-size:19px}
+.egg-panel{left:16px;top:73px;width:205px;padding:6px}
+.egg-panel p{font-size:8px;margin:1px 3px 4px}
+.egg-panel button{gap:6px;padding:5px 4px}
+.egg-panel button i{width:25px;height:25px;font-size:13px}
+.egg-panel button b{font-size:9px}
+.egg-panel button small{font-size:9px;margin-top:1px}
+.egg-panel button em{font-size:10px}
+.hud.bottom #message{max-width:350px;padding:8px 10px}
+.hud.bottom #message b{font-size:9px}
+.hud.bottom #message span{font-size:11px}
+.hint{padding:6px 9px;font-size:7px}
+@media(max-width:700px){.game-shell{height:160vw;min-height:650px;max-height:1000px}.hud{left:9px;right:9px}.hud.top>div{padding:5px 6px}.meter{width:88px}.pollen b{font-size:16px}.egg-panel{top:61px;left:9px;width:170px;padding:5px}.egg-panel button{gap:5px;padding:4px 3px}.egg-panel button i{width:22px;height:22px;font-size:12px}.egg-panel button b{font-size:8px}.egg-panel button small{font-size:8px}.egg-panel p{font-size:7px}.hud.bottom{left:9px;right:9px;bottom:9px}.hud.bottom #message{max-width:72vw;padding:7px 8px}.hud.bottom #message span{font-size:10px}}
+/* Small motion cues keep the illustrated arena lively without distracting from play. */
+@keyframes meadowHudFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes messageArrive{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes panelArrive{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.hud.top>div{animation:meadowHudFloat 5s ease-in-out infinite}
+.hud.top>.wave{animation-delay:.5s}
+.hud.top>.pollen{animation-delay:1s}
+.hud.bottom #message b{animation:messageArrive .28s ease-out both}
+.egg-panel{animation:panelArrive .35s ease-out both}
+header button{transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
+header button:hover{transform:rotate(12deg) scale(1.08);background:#fff3c6;box-shadow:0 0 0 4px #ffc72e30}
+.meter i{box-shadow:0 0 8px #ffc72e99}
+@media(prefers-reduced-motion:reduce){.hud.top>div,.hud.bottom #message b,.egg-panel{animation:none}*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+/* Queen egg hatch interface replaces the old bee shop. */
+#egg-list{display:flex;flex-wrap:wrap;gap:7px;padding:3px 2px 5px}
+#egg-list .egg{width:42px;height:42px;border:1px solid #bd9b48;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fffbe9,#f6d777 72%);font-size:22px;cursor:pointer;box-shadow:0 2px 8px #6a531c30;animation:eggBob 2s ease-in-out infinite}
+#egg-list .egg:hover{transform:scale(1.12);box-shadow:0 0 0 4px #ffe98c66}
+.egg-tip,#egg-empty{display:block;font-size:9px;color:#617354;line-height:1.35;padding:2px 3px}
+#egg-empty[hidden]{display:none}
+@keyframes eggBob{0%,100%{translate:0 0}50%{translate:0 -3px}}
+.egg-choice{position:absolute;z-index:4;inset:0;display:none;place-items:center;background:#13271c88;backdrop-filter:blur(3px)}
+.egg-choice.show{display:grid}
+.egg-choice>div{position:relative;width:min(330px,88%);padding:24px;background:#f9f1d9;border:1px solid #d3b75e;border-radius:14px;box-shadow:0 18px 55px #10251670}
+.egg-choice p{margin:0 0 13px;font:10px 'DM Mono';letter-spacing:.12em;color:#64833f}
+.egg-choice>div>button:not(.egg-close){width:100%;display:flex;align-items:center;gap:10px;margin:5px 0;padding:11px 12px;border:1px solid #d8d2b9;border-radius:8px;background:#fff9e8;color:#1c321e;text-align:left;font:700 11px 'DM Mono';cursor:pointer}
+.egg-choice>div>button:not(.egg-close):hover{border-color:#86a951;background:#edf5d9}
+.egg-choice button small{margin-left:auto;max-width:155px;color:#67745b;font:10px Outfit;text-align:right}
+.egg-choice .egg-close{position:absolute;right:9px;top:7px;border:0;background:none;font-size:22px;color:#56654c;cursor:pointer}
+@media(max-width:700px){.egg-panel{width:160px;top:61px}.egg-choice>div{padding:20px 16px}.egg-choice>div>button:not(.egg-close){font-size:9px}.egg-choice button small{font-size:9px}}
