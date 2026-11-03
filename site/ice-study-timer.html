@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eaf6f4">
+  <title>Ice Break — Random Study Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ice-study-timer.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar"><a class="wordmark" href="#"><span class="mark">✳</span> ice break</a><span class="top-note">A LITTLE FOCUS, BEFORE THE MELT</span><span class="live-dot">● &nbsp;READY WHEN YOU ARE</span></header>
+    <section class="hero">
+      <div class="copy"><p class="eyebrow">YOUR STUDY SPRINT, ON ICE</p><h1>Make this<br>time <em>count.</em></h1><p class="lede">Start studying. The ice decides when your break begins.</p>
+        <div class="timer-card" aria-live="polite"><div class="timer-top"><span id="statusLabel">ICE IS CHILLING</span><span class="timer-icon">◷</span></div><div class="digits" id="clock">08:00</div><div class="progress-track"><div id="progress"></div></div><div class="timer-bottom"><span id="rangeLabel">RANDOM WINDOW · 5–15 MIN</span><span id="elapsedLabel">0% MELTED</span></div>
+          <div class="actions"><button id="startBtn" class="primary">Start studying <span>→</span></button><button id="resetBtn" class="secondary" aria-label="Pick a new ice timer" title="Pick a new ice timer">↻</button></div>
+        </div>
+        <div class="microcopy"><span class="sparkle">✦</span><span id="encouragement">One small session is still a win. What are you working on?</span></div>
+      </div>
+      <div class="visual" aria-label="Illustration of an ice cube melting in a glass"><div class="sun"></div><div class="halo"></div><div class="glass"><div class="water" id="water"></div><div class="ice" id="ice"><i></i><b></b><span></span></div><div class="glass-shine"></div></div><div class="drop drop-one">·</div><div class="drop drop-two">·</div><div class="ice-caption"><span class="caption-dot"></span><span id="iceCaption">YOUR ICE CUBE IS READY</span></div></div>
+    </section>
+    <section class="bottom-row"><div class="how"><span class="number">01</span><div><b>Pick up where you left off</b><p>Choose one thing to work on. No perfect plan required.</p></div></div><div class="how"><span class="number">02</span><div><b>Let the ice set the pace</b><p>Your countdown lands somewhere between 5 and 15 minutes.</p></div></div><div class="how"><span class="number">03</span><div><b>Take a breath when it melts</b><p>When time’s up, stretch, sip some water, or start again.</p></div></div></section>
+    <footer><span>ICE BREAK <i>·</i> STUDY A LITTLE, OFTEN</span><button id="soundBtn" aria-pressed="false">♫ &nbsp;SOUND OFF</button></footer>
+  </main>
+  <script src="ice-study-timer.js"></script>
+</body>
+</html>
