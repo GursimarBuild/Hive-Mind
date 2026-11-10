@@ -102,13 +102,11 @@ header button:hover{transform:rotate(12deg) scale(1.08);background:#fff3c6;box-s
 /* Queen hatch tray follows the hand-drawn stacked menu: pollen, eggs, then bee roles. */
 .egg-panel{left:auto;right:16px;top:72px;width:218px;padding:9px;background:#342c25f2;border:2px solid #5b4a39;border-radius:8px;color:#f7e6bd;box-shadow:0 10px 26px #090d0b70;backdrop-filter:blur(5px);animation:none}.menu-toggle{width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border:1px solid #8a704c;border-radius:5px;background:#201b18;color:#f8e5b5;cursor:default}.egg-panel .menu-toggle>span{font:700 9px 'DM Mono';letter-spacing:.12em;color:#d1b980}.egg-panel .menu-toggle>b{display:flex;align-items:center;gap:7px;margin:0;color:#ffc52e;font:800 22px Outfit}.menu-toggle i{font-style:normal;font-size:17px;color:#ffc52e}.egg-stock{margin:9px 0;padding:8px 9px;border:1px solid #59483a;border-radius:5px;background:#28221e}.egg-stock>p,.hatch-types>p{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;color:#d3bd91;font:700 8px 'DM Mono';letter-spacing:.1em}.egg-stock>p b{font-size:11px;color:#ffc52e}#egg-list{display:flex;gap:5px;min-height:35px;align-items:center;flex-wrap:wrap;padding:0}#egg-list .egg{display:grid;place-items:center;width:30px;height:30px;border:1px solid #96774b;border-radius:50%;background:radial-gradient(circle at 34% 25%,#fffce8,#e9bf66 73%);font-size:19px;box-shadow:0 2px 6px #08070660;animation:eggBob 2s ease-in-out infinite}.egg-stock #egg-empty{display:block;margin:2px 0 0;color:#a99a7e;font:9px/1.35 Outfit}.egg-stock #egg-empty[hidden]{display:none}.hatch-types>p{margin:0 2px 5px}.egg-panel .hatch-types>button[data-hatch]{width:100%;min-height:45px;display:flex;align-items:center;gap:8px;margin:4px 0;padding:5px 7px;border:1px solid #5c4b3b;border-radius:5px;background:#43382f;color:#f7edd9;text-align:left;cursor:pointer;transition:transform .16s,border-color .16s,background .16s}.egg-panel .hatch-types>button[data-hatch]:hover:not(:disabled){transform:translateX(-3px);border-color:#d5a83f;background:#594735}.egg-panel .hatch-types>button[data-hatch]:disabled{opacity:.43;cursor:not-allowed}.type-icon{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:4px;font-size:18px;font-style:normal}.farmer-icon{background:#ba8425;color:#fff0b1}.soldier-icon{background:#806744;color:#fff0cd}.gas-icon{background:#5797a0;color:#e1fbff}.egg-panel .hatch-types button span{display:flex;flex:1;flex-direction:column;gap:2px}.egg-panel .hatch-types button b{color:#fff1d2;font:700 9px 'DM Mono';letter-spacing:.06em}.egg-panel .hatch-types button small{color:#c4b39a;font:9px Outfit}.egg-panel .hatch-types button em{font:700 7px 'DM Mono';font-style:normal;letter-spacing:.08em;color:#efc45a}.hatch-fx{position:absolute;z-index:4;width:48px;height:48px;display:none;place-items:center;pointer-events:none;filter:drop-shadow(0 4px 7px #12100999)}.hatch-fx.active{display:grid}.egg-shell{position:absolute;font-size:35px;line-height:1}.egg-left{clip-path:inset(0 48% 0 0)}.egg-right{clip-path:inset(0 0 0 48%)}.hatch-spark{position:absolute;opacity:0;color:#fff1a2;font-size:38px;text-shadow:0 0 14px #ffbf32}.hatch-fx.cracking .egg-left{animation:shellLeft .34s ease-in forwards}.hatch-fx.cracking .egg-right{animation:shellRight .34s ease-in forwards}.hatch-fx.cracking .hatch-spark{animation:sparkPop .36s ease-out forwards}@keyframes shellLeft{to{transform:translate(-12px,-10px) rotate(-40deg);opacity:0}}@keyframes shellRight{to{transform:translate(12px,-10px) rotate(40deg);opacity:0}}@keyframes sparkPop{20%{opacity:1;transform:scale(.55)}100%{opacity:0;transform:scale(1.5)}}
 @media(max-width:700px){.egg-panel{right:9px;left:auto;top:61px;width:min(180px,46vw);padding:6px}.menu-toggle{min-height:42px;padding:5px 7px}.egg-panel .menu-toggle>b{font-size:18px}.egg-stock{margin:6px 0;padding:6px}.egg-panel .hatch-types>button[data-hatch]{min-height:39px;margin:3px 0;padding:4px}.type-icon{width:29px;height:29px;font-size:16px}.egg-panel .hatch-types button small{font-size:8px}.egg-panel .hatch-types button em{font-size:6px}}
-.hatch-menu{max-height:430px;opacity:1;overflow:hidden;transition:max-height .28s ease,opacity .22s ease}.egg-panel.collapsed .hatch-menu{max-height:0;opacity:0;pointer-events:none}.menu-toggle .menu-chevron{margin-left:3px;color:#d2bd92;font-size:17px;transition:transform .25s ease}.egg-panel.collapsed .menu-chevron{transform:rotate(-90deg)}.menu-toggle{cursor:pointer}.menu-toggle:hover{border-color:#d2a23c;background:#29221d}
 .egg-panel .hatch-types .type-bee{width:42px;height:38px;flex:none;object-fit:contain;filter:drop-shadow(0 2px 3px #080706aa);transition:transform .2s ease}.egg-panel .hatch-types button:hover:not(:disabled) .type-bee{transform:scale(1.14) rotate(-5deg)}@media(max-width:700px){.egg-panel .hatch-types .type-bee{width:34px;height:32px}}
 /* Sharper bee-type selectors with a bright tile that separates each illustration from the wood panel. */
 .egg-panel{width:236px}.egg-panel .hatch-types>button[data-hatch]{min-height:56px;padding:6px 8px;gap:9px;background:linear-gradient(110deg,#59483a,#40352d)}.egg-panel .hatch-types .type-bee{width:54px;height:46px;padding:2px;object-fit:contain;border:1px solid #d4ad5c;border-radius:7px;background:radial-gradient(circle at 40% 36%,#fff2bf,#d1a043 78%);filter:drop-shadow(0 2px 2px #100d0a80)}.egg-panel .hatch-types button b{font-size:10px;color:#fff5df}.egg-panel .hatch-types button small{font-size:9px;color:#e1d1b4}.egg-panel .hatch-types button em{padding:4px 5px;border:1px solid #9d7a41;border-radius:3px;background:#33281d;font-size:8px;color:#ffd36d}.egg-panel .hatch-types button:hover:not(:disabled) .type-bee{transform:scale(1.08) rotate(-4deg)}
 @media(max-width:700px){.egg-panel{width:min(198px,51vw)}.egg-panel .hatch-types>button[data-hatch]{min-height:49px;gap:6px;padding:5px}.egg-panel .hatch-types .type-bee{width:43px;height:39px}.egg-panel .hatch-types button b{font-size:9px}.egg-panel .hatch-types button em{font-size:7px;padding:3px}}
 
-.egg-panel .menu-toggle .menu-chevron{display:grid;place-items:center;flex:none;width:32px;height:32px;margin-left:6px;border:1px solid #f1cf78;border-radius:5px;background:#f0c34f;color:#30251a;font:700 20px/1 Outfit;box-shadow:0 1px 4px #130f0a80;transition:background .18s,transform .18s}.egg-panel .menu-toggle .menu-chevron::before{content:'▴'}.egg-panel.collapsed .menu-toggle .menu-chevron::before{content:'▾'}.egg-panel.collapsed .menu-chevron{transform:none}.egg-panel .menu-toggle:hover .menu-chevron{background:#ffdc77}
 /* Sketchbook theme: crayon-on-paper styling to match the hand-drawn bee, bear, hive and flower art. */
 :root{--paper-grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .12 0 0 0 .11 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");--sketch-ink:#2b2414;--wobble:16px 5px 14px 6px/6px 14px 5px 16px}
 body{background:#f8f0d6 var(--paper-grain)}
@@ -155,7 +153,7 @@ header{font-size:14px}.brand{font-size:20px;letter-spacing:.06em}.brand i{width:
 /* Compact HUD: smaller panels keep every scout point on the field in view. */
 .hud.top>div{border-width:6px;padding:3px 9px}.hud.top small{font-size:11px}.hud.top>div>b{margin-top:1px;font-size:12px}.wave b{font-size:14px}.meter{width:118px;height:9px;margin-top:3px}
 .egg-panel{top:60px;right:12px;width:180px;padding:4px 6px 6px;border-width:6px}
-.egg-panel .menu-toggle{min-height:30px;padding:3px 5px 3px 9px}.egg-panel .menu-toggle>span:first-child{font-size:13px}.egg-panel .menu-toggle .menu-chevron{width:22px;height:22px;font-size:14px}
+.egg-panel .menu-toggle{min-height:30px;padding:3px 5px 3px 9px;justify-content:center;cursor:default}.egg-panel .menu-toggle:hover{background:#312e2b}.egg-panel .menu-toggle>span:first-child{font-size:13px}
 .egg-panel .egg-stock{margin:5px 0;padding:3px 7px 4px}.egg-panel .egg-stock>p,.egg-panel .hatch-types>p{margin:0 0 2px;font-size:12px}.egg-panel #egg-list{min-height:24px;gap:4px}#egg-list .egg{width:19px;height:24px;border-width:1.5px;box-shadow:1px 2px 0 #2b241433}.egg-panel .egg-stock #egg-empty{font-size:12px}
 .egg-panel .hatch-types>button[data-hatch],.egg-panel .hatch-types>button[data-hatch]:hover:not(:disabled){min-height:40px;margin:3px 0;padding:2px 6px 2px 54px;gap:4px}.egg-panel .hatch-types button b{font-size:14px}.egg-panel .hatch-types button small{font-size:11px}.egg-panel .hatch-types button em{padding:1px 5px;font-size:11px}
 .hud.bottom #message{max-width:290px;padding:3px 9px;border-width:6px}.hud.bottom #message b{font-size:12px}.hud.bottom #message span{font-size:13px;line-height:1.2}.hint{padding:5px 8px;font-size:11px}
@@ -163,3 +161,75 @@ header{font-size:14px}.brand{font-size:20px;letter-spacing:.06em}.brand i{width:
 .story-caption{max-width:520px;padding:7px 14px;border-width:7px}.story-caption p{font-size:13px}.story-caption h2{font-size:clamp(22px,2.8vw,34px)}.story-caption>span{font-size:16px}.story-caption>small{font-size:13px}#storyNext{padding:5px 12px;font-size:16px}
 .game-fullscreen,.game-sound{width:32px;height:32px;font-size:17px}.game-sound{position:absolute;z-index:3;left:16px;top:calc(50% + 24px);border:1px solid #fff8;border-radius:50%;background:#18351edb;color:#fff5dc;cursor:pointer;box-shadow:0 3px 14px #101a1870}.game-sound:hover{background:#315b35}.game-sound.muted{opacity:.65}.game-sound.muted::after{content:'';position:absolute;left:6px;right:6px;top:50%;height:2px;background:#ffc72e;transform:rotate(-40deg)}.game-fullscreen{top:calc(50% - 20px)}.game-shell:fullscreen .game-sound{left:20px}
 @media(max-width:700px){.hud.top>div{border-width:5px;padding:2px 6px}.meter{width:80px}.egg-panel{top:56px;right:8px;width:min(150px,44vw);border-width:5px}.egg-panel .hatch-types>button[data-hatch],.egg-panel .hatch-types>button[data-hatch]:hover:not(:disabled){min-height:34px;padding-left:44px}.egg-panel .hatch-types button b{font-size:12px}.egg-panel .hatch-types button em{display:none}.egg-panel .menu-toggle>span:first-child{font-size:11px}.hud.bottom #message{max-width:62vw}.coach{padding:4px 9px 5px}.coach b{font-size:17px}.coach span{font-size:13px}.story-caption h2{font-size:22px}.story-caption>span{font-size:14px}}
+/* Big hive health bar: label and number share a line, with a wide crayon meter beneath. */
+.hud.top>div:first-child{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:12px;padding:5px 12px 7px}
+.hud.top>div:first-child small{font-size:15px}
+.hud.top>div:first-child>b{grid-row:1;grid-column:2;margin:0;font-size:16px}
+.hud.top>div:first-child .meter{grid-column:1/-1;width:min(300px,30vw);height:22px;margin-top:4px;border-width:2.5px;border-radius:12px 4px 10px 4px}
+.meter i{border-radius:8px 3px 7px 3px}
+.meter.low i{background:repeating-linear-gradient(-55deg,#e5543f 0 5px,#c43b2b 5px 7px)}
+.meter.low{animation:meterAlarm .8s ease-in-out infinite}
+@keyframes meterAlarm{50%{box-shadow:0 0 0 3px #e5543f66}}
+@media(max-width:700px){.hud.top>div:first-child{padding:3px 7px 5px;column-gap:6px}.hud.top>div:first-child .meter{width:min(120px,28vw);height:15px}.hud.top>div:first-child small{font-size:11px}.hud.top>div:first-child>b{font-size:12px}}
+/* Day / night interlude card that sits over the darkening meadow between days. */
+.day-card{position:absolute;z-index:6;left:50%;top:84px;transform:translateX(-50%);width:min(440px,calc(100% - 32px));padding:8px 16px;display:none;text-align:center;color:#2b3324;border:8px solid transparent;border-image:url(assets/ui-frame.png) 30 stretch;background:#fffaea var(--paper-grain);background-clip:padding-box}
+.day-card.show{display:block}.day-card.enter>*{animation:messageArrive .5s ease-out both}
+.day-card small{display:block;font:15px 'Patrick Hand',system-ui;letter-spacing:.12em;color:#a8761c}
+.day-card b{display:block;margin:2px 0 4px;font:700 clamp(24px,3vw,34px)/1 'Cabin Sketch',cursive;color:#1c2a14}
+.day-card span{display:block;font:16px/1.3 'Patrick Hand',system-ui}
+.day-card button{margin-top:4px;border:0;background:none;color:#5c6b4f;text-decoration:underline;font:14px 'Patrick Hand',system-ui;cursor:pointer}
+@media(max-width:700px){.day-card{top:64px;padding:5px 10px}.day-card span{font-size:14px}}
+/* The crayon X replaces the cursor while a bee is being aimed. */
+canvas.aiming{cursor:none}
+/* Playtest pass: a louder hive health box, a bee legend with hotkeys, coach icons and controls, and a no-scroll help page. */
+.hud-hive{display:inline-block;width:24px;height:24px;margin-right:5px;vertical-align:-6px;background:url(assets/player-hive.png) center/150% no-repeat}
+.hud.top>.health-box small{color:#8a2f14;letter-spacing:.08em}
+.hud.top>.health-box.hit{animation:hpHit .5s ease-out}.health-box.hit .meter{box-shadow:0 0 0 4px #e5543f99}
+@keyframes hpHit{0%{transform:scale(1.1)}20%{transform:translateX(-6px) scale(1.08)}40%{transform:translateX(6px) scale(1.05)}60%{transform:translateX(-3px)}100%{transform:none}}
+kbd{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 3px;border:1.5px solid currentColor;border-radius:5px 2px 4px 2px;font:13px/1 'Patrick Hand',system-ui;vertical-align:1px}
+.egg-panel .hatch-types button b kbd{min-width:15px;height:15px;margin-left:3px;font-size:11px;color:#ffc72e}
+.egg-panel .hatch-types>button.nudge{animation:hatchNudge .6s ease-out}@keyframes hatchNudge{0%,100%{box-shadow:0 0 0 0 #ffc72e00}30%{transform:translateX(-6px);box-shadow:0 0 0 4px #ffc72e}60%{transform:translateX(4px);box-shadow:0 0 0 3px #ffc72e}}
+.hint.legend{display:flex;flex-direction:column;gap:3px;padding:6px 10px 5px;text-align:left;font-size:14px;line-height:1.1}
+.legend span{display:flex;align-items:center;gap:6px;white-space:nowrap;color:#e8dcbc}.legend span b{color:var(--c);letter-spacing:.04em}.legend kbd{color:#fff3cf}
+.legend .bee-icon{width:24px;height:24px;border-radius:50%;background-color:#fff3cf;box-shadow:0 0 0 2.5px var(--c)}
+.legend small{margin-top:2px;font-size:12px;color:#cfc3a3}
+.lg-soldier,.bee-icon.soldier{--c:#e0662e}.lg-gas,.bee-icon.gas{--c:#4cc0cf}.lg-farmer,.bee-icon.farmer{--c:#f2b51c}
+canvas.hovering{cursor:pointer}
+.coach .tok{display:inline-block;width:28px;height:28px;margin:0 2px;vertical-align:-8px;background-position:center;background-size:contain;background-repeat:no-repeat}
+.coach .tok.bee-icon{background-size:155%;background-position:center 42%;border-radius:50%;background-color:#fff3d4;box-shadow:0 0 0 2.5px var(--c)}
+.coach .tok.ico-hive{background-image:url(assets/player-hive.png);background-size:150%}
+.coach .tok.ico-bear{background-image:url(assets/bear-enemy.gif);border-radius:50%;box-shadow:0 0 0 2.5px #e0662e}
+.coach .tok.ico-cloud{background-image:url(assets/pesticide-cloud.png);background-size:140%;border-radius:50%;background-color:#fff;box-shadow:0 0 0 2.5px #3fa9b8}
+.coach .tok.ico-egg{width:18px;height:23px;vertical-align:-5px;border:2px solid var(--sketch-ink);border-radius:50% 50% 46% 46%/60% 60% 40% 40%;background:radial-gradient(circle at 34% 28%,#fffdf2 0 16%,#f7ebc4 46%,#e3c77d 100%)}
+.coach .tok.ico-health{width:60px;height:15px;padding:1px;vertical-align:-2px;border:2px solid var(--sketch-ink);border-radius:8px 3px 7px 3px;background:#fffaea}.coach .tok.ico-health i{display:block;width:72%;height:100%;border-radius:5px 2px 4px 2px;background:repeating-linear-gradient(-55deg,#ffc72e 0 5px,#f0ad1c 5px 7px)}
+.coach .tok.ico-scout{width:22px;height:22px;vertical-align:-5px;border-radius:50%;background:radial-gradient(circle,#ffc72e 0 36%,transparent 39% 58%,#ffc72e 61% 74%,transparent 77%)}
+.coach .coach-tip{margin:4px 0 0;padding:3px 7px;border-left:3px solid #ffc72e;background:#fff3d4;font-size:14px;line-height:1.2;color:#6b4a10}.coach .coach-tip[hidden]{display:none}
+#coachBack{padding:2px 4px;border:0;background:none;color:#5c6b4f;font:15px 'Patrick Hand',system-ui;cursor:pointer}#coachBack:hover:not(:disabled){color:#1c2a14;text-decoration:underline}#coachBack:disabled{opacity:.3;cursor:default}
+.game-shell.tutorial .egg-panel:not(:has(.tut-focus)),.game-shell.tutorial .hud.top>div:not(.tut-focus){filter:brightness(.62) saturate(.6)}
+.result.show{overflow-y:auto}.result>.help{max-width:980px;padding:16px 24px 14px}
+.help>p:first-child{margin:0}.help h2{font-size:clamp(30px,3.4vw,44px);margin:4px 0 6px}.help .help-intro{max-width:none;font-size:16px;line-height:1.3}
+.help-actions{margin-top:10px;gap:8px}.help-actions li{grid-template-columns:34px 1fr;column-gap:8px;padding:5px 9px;border-width:7px}.help-actions i{width:34px;height:34px}
+.help-actions b{font-size:17px}.help-actions small{margin-top:1px;font-size:13px;line-height:1.18}
+.help .help-head{margin:10px 0 6px}.help-links{gap:8px}.help-links a{padding:6px 28px 6px 12px;font-size:16px}.help-links a::after{top:6px}.help-links a small{font-size:12px;line-height:1.15}
+.help .help-buttons button{margin-top:10px}.help .help-buttons .ghost{margin:10px 0 0}
+@media(max-width:700px){.coach .tok{width:22px;height:22px;vertical-align:-6px}.coach .coach-tip{font-size:12px}}
+.egg-panel .hatch-types>button[data-hatch]{position:relative}.egg-panel .hatch-types button b kbd{position:absolute;left:4px;top:4px;margin:0;background:#312e2b;border-color:#ffc72e}
+/* Playtest pass 2: a slimmer health box and nursery, a bigger day title, and the nursery tucked into the tree line. */
+.hud.top>div.health-box{column-gap:10px;padding:4px 11px 6px;border-width:7px}
+.hud.top>div.health-box small{font-size:14px;white-space:nowrap}.hud.top>div.health-box>b{font-size:15px;white-space:nowrap}
+.hud.top>div.health-box .meter{width:min(210px,26vw);height:15px;margin-top:3px;border-width:2px}
+.hud-hive{width:21px;height:21px;margin-right:4px;vertical-align:-5px}
+.hud.top>.wave{padding:5px 22px 7px;border-width:8px}
+.hud.top>.wave small{font-size:15px;letter-spacing:.08em}.hud.top>.wave>b{margin-top:2px;font-size:28px;line-height:1}
+.egg-panel{top:58px;right:6px;width:156px;padding:3px 5px 5px;border-width:6px}
+.egg-panel .menu-toggle{min-height:24px;padding:2px 6px}.egg-panel .menu-toggle>span:first-child{font-size:12px}
+.egg-panel .egg-stock{margin:4px 0;padding:2px 6px 3px}.egg-panel .egg-stock>p,.egg-panel .hatch-types>p{margin:0 0 1px;font-size:11px}.egg-panel .egg-stock>p b{font-size:14px}
+.egg-panel #egg-list{min-height:19px;gap:3px}#egg-list .egg{width:15px;height:19px}.egg-panel .egg-stock #egg-empty{font-size:11px}
+.egg-panel .hatch-types>button[data-hatch],.egg-panel .hatch-types>button[data-hatch]:hover:not(:disabled){min-height:33px;margin:3px 0;padding:2px 5px 2px 42px;gap:3px}
+.egg-panel .hatch-types button b{font-size:13px}.egg-panel .hatch-types button small{font-size:10px;line-height:1.05}.egg-panel .hatch-types button em{padding:1px 4px;font-size:10px}
+.egg-panel .hatch-types button b kbd{min-width:13px;height:13px;left:3px;top:3px;font-size:10px}
+.egg-panel button:hover{transform:none}
+@media(max-width:700px){.hud.top>div.health-box .meter{width:min(100px,24vw);height:10px}.hud.top>div.health-box small{font-size:10px}.hud.top>.wave small{font-size:11px}.hud.top>.wave>b{font-size:19px}.hud.top>.wave{padding:3px 10px 4px;border-width:6px}.egg-panel{width:min(136px,40vw)}.egg-panel .hatch-types>button[data-hatch],.egg-panel .hatch-types>button[data-hatch]:hover:not(:disabled){min-height:30px;padding-left:36px}}
+/* The day card sits below the bigger day title. */
+.day-card{top:112px}
+@media(max-width:700px){.day-card{top:72px}}
