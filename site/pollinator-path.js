@@ -23,7 +23,7 @@ const EGG_TIME=26,EGG_MIN=8;         // seconds per egg, and the fastest an egg 
 const EGG_FOOD_BONUS=.75,EGG_MAX=4;  // seconds each food takes off the timer; the timer pauses at this many eggs
 const RAID_BASE=4,RAID_GROWTH=1.5;   // raiders on day 1, and how much bigger each day's raid is
 const RAID_WARNING=10,FIRST_RAID_IN=22,NEXT_RAID_IN=15;  // seconds of calm before the first raid, and before each later one
-const STING={reach:30,time:.36};     // soldier attack: how close it must be, and how long one lunge takes
+const STING={reach:22.5,time:.36};     // soldier attack: how close it must be, and how long one lunge takes
 const GAS_FAN={range:82,dps:27,push:16}; // gas bee attack: fan reach, cloud damage per second, how fast the cloud is blown back
 const HUMAN_DAY=5;                   // the first day a builder paves a grove
 /* The day each threat is introduced, and the mix of raiders on each day (weights). After the last entry the game is endless. */
@@ -34,7 +34,7 @@ const RAID_MIX=[null,{ant:1},{ant:.55,hornet:.45},{ant:.4,hornet:.25,cloud:.35},
 /* Each bee's ring colour matches its hat: soldier = green helmet, gas bee = orange hard hat, farmer = blue flower hat.
    key = the hotkey that hatches it, selectKey = the hotkey that selects every bee of that type. */
 const BEE_TYPES={
-soldier:{hp:50,speed:72,aggro:150,cool:.75,dmg:14,color:'#1f9d55',scale:1.1,bob:3,bobRate:3.2,name:'SOLDIER',plural:'SOLDIERS',role:'stings ants, hornets and bears',key:'1',selectKey:'Q'},
+soldier:{hp:30,speed:72,aggro:150,cool:.75,dmg:14,color:'#1f9d55',scale:1.1,bob:3,bobRate:3.2,name:'SOLDIER',plural:'SOLDIERS',role:'stings ants, hornets and bears',key:'1',selectKey:'Q'},
 gas:{hp:30,speed:74,aggro:190,color:'#f08a1c',scale:1,bob:4.5,bobRate:2.1,name:'GAS BEE',plural:'GAS BEES',role:'fans pesticide away',key:'2',selectKey:'W'},
 farmer:{hp:22,speed:115,color:'#2f9fd0',scale:.88,bob:2,bobRate:8,name:'FARMER',plural:'FARMERS',role:'scouts and carries food',key:'3',selectKey:'E'}};
 /* Every enemy wears the ring colour of the bee that beats it (counter). beeDmg / reach / every = its attack on bees. */
