@@ -30,7 +30,7 @@ const HUMAN_DAY=5;                   // the first day a builder paves a grove
 const DAY_INTRO={2:'hornet',3:'cloud',4:'bear',5:'human'};
 const RAID_MIX=[null,{ant:1},{ant:.55,hornet:.45},{ant:.4,hornet:.25,cloud:.35},{ant:.35,hornet:.2,cloud:.2,bear:.25},{ant:.3,hornet:.25,cloud:.22,bear:.23}];
 
-/* ================= BEES / ENEMIES ================= */
+/* ================= BEES / ENEMIES =================+++++++ */
 /* Each bee's ring colour matches its hat: soldier = green helmet, gas bee = orange hard hat, farmer = blue flower hat.
    key = the hotkey that hatches it, selectKey = the hotkey that selects every bee of that type. */
 const BEE_TYPES={
