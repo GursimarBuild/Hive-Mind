@@ -19,8 +19,9 @@ let wantTraining=true,trained=false,lessonDone=false,introSeen={};
 /* ================= TUNABLES ================= */
 const BEE_SPEED=1.6;                 // one knob for how fast every bee flies (1 = the alpha speed)
 const MAP_ZOOM=.78;                  // how close the camera is: below 1 pulls back so the meadow is bigger than the screen at 1:1
-const EGG_TIME=26,EGG_MIN=8;         // seconds per egg, and the fastest an egg can ever come
-const EGG_FOOD_BONUS=.75,EGG_MAX=4;  // seconds each food takes off the timer; the timer pauses at this many eggs
+const EGG_TIME=38,EGG_MIN=6;         // seconds per egg on its own (no food), and the fastest an egg can ever come
+const EGG_FOOD_BONUS=1.5,EGG_MAX=4;  // seconds each food takes off the timer; the timer pauses at this many eggs
+const FOOD_PER_TRIP=2,GATHER_TIME=1.8; // food a farmer carries home per trip (native groves give double), and seconds spent gathering
 const RAID_BASE=4,RAID_GROWTH=1.5;   // raiders on day 1, and how much bigger each day's raid is
 const RAID_WARNING=10,FIRST_RAID_IN=22,NEXT_RAID_IN=15;  // seconds of calm before the first raid, and before each later one
 const STING={reach:22.5,time:.36};     // soldier attack: how close it must be, and how long one lunge takes
@@ -316,7 +317,7 @@ function update(dt){
   hiveHitFlash=Math.max(0,hiveHitFlash-dt);
   for(const g of flowerGroves)if(g.discovered)g.reveal=Math.min(1,g.reveal+dt*.8);
   if(!tutorial){
-    /* Eggs: 36 s each. Food shortens the wait, but never below 10 s, and the timer pauses while 4 eggs are waiting. */
+    /* Eggs: EGG_TIME s each on their own. Food shortens the wait, but never below EGG_MIN s, and the timer pauses at EGG_MAX eggs. */
     if(eggs.length<EGG_MAX){eggTimer-=dt;eggAge+=dt;if(eggTimer<=0&&eggAge>=EGG_MIN){layEgg();eggTimer=EGG_TIME;eggAge=0}}
     noteClock-=dt;if(noteClock<=0){noteClock=24;if(!spawnLeft&&nextWave>RAID_WARNING&&performance.now()-lastMsgAt>8000)note()}
     /* The day: a calm countdown, the raid, then nightfall once every raider (and the builder) is gone. */
@@ -365,14 +366,14 @@ function farmerWork(b,speed,dt){
       if(!tutorial&&!seen.noGrove&&gameElapsed>12){seen.noGrove=1;msg('YOUR FARMER IS WAITING','No flowers found yet. Click the farmer, then a SCOUT marker in the fog.')}
     }
   }
-  if(b.mode==='outbound'){if(step(b,grovePos(b.grove),speed,dt)<14){b.mode='gather';b.gather=2.5}}
+  if(b.mode==='outbound'){if(step(b,grovePos(b.grove),speed,dt)<14){b.mode='gather';b.gather=GATHER_TIME}}
   else if(b.mode==='gather'){
     let p=grovePos(b.grove),a=b.phase*1.3+b.id*2.1;b.gather-=dt;
     glide(b,{x:p.x+Math.cos(a)*18,y:p.y+Math.sin(a)*11},dt,3);
-    if(b.gather<=0){b.carry=b.grove.native?2:1;b.mode='return'}
+    if(b.gather<=0){b.carry=FOOD_PER_TRIP*(b.grove.native?2:1);b.mode='return'}
   }else if(b.mode==='return'){if(step(b,hive,speed*1.05,dt)<20)deliver(b)}
 }
-/* Each food delivered takes 0.75 s off the egg timer. A farmer the player has not pinned to a grove picks the nearest one again each trip. */
+/* Each food delivered takes EGG_FOOD_BONUS s off the egg timer. A farmer the player has not pinned to a grove picks the nearest one again each trip. */
 function deliver(b){
   let n=b.carry||1;b.carry=0;burst(b.x,b.y,'#ffd43e',8);dayStats.food+=n;if(tutorial)tutorial.food+=n;eggTimer-=n*EGG_FOOD_BONUS;
   floaters.push({x:b.x,y:b.y-24,text:`+${n} food`,life:.9,color:'#a8761c',size:16});
