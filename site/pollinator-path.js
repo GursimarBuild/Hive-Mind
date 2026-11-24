@@ -25,7 +25,7 @@ const FOOD_PER_TRIP=2,GATHER_TIME=1.8; // food a farmer carries home per trip (n
 const RAID_BASE=4,RAID_GROWTH=2;     // raiders on day 1, and how many more join each day's raid
 const RAID_CAP={bear:[4,6],hornet:[4,6],cloud:[3,8]};  // [the most of each per raid, the day that cap starts growing by one a day]
 const POISON_TIME=8,CLOUD_DRIFT=60;  // seconds pesticide must sit on a flower bed to kill it for good; seconds a cloud with no flowers left to find floats around before it thins away
-const ROAD_HALF=55,ROAD_START=.46,ROAD_STEP=.05,BULLDOZE_TIME=5.5,TWO_ROADS_DAY=7;  // half a road's width; how far from the hive the first road runs and how much closer each day's comes (share of the screen); seconds under the bulldozer that kill a bee; the day it starts coming twice a day
+const ROAD_HALF=55,ROAD_START=.46,ROAD_STEP=.05,BULLDOZE_TIME=5.5,ONE_ROAD_DAYS=2;  // half a road's width; how far from the hive the first road runs and how much closer each day's comes (share of the screen); seconds under the bulldozer that kill a bee; how many days it comes once a day before it starts coming twice
 const RAID_WARNING=10,FIRST_RAID_IN=22,NEXT_RAID_IN=15;  // seconds of calm before the first raid, and before each later one
 const STING={reach:22.5,time:.36};     // soldier attack: how close it must be, and how long one lunge takes
 const GAS_FAN={range:82,dps:27,push:16}; // gas bee attack: fan reach, cloud damage per second, how fast the cloud is blown back
@@ -197,7 +197,7 @@ let raidCount={},nextBuilder=0;  // how many of each type this raid has sent so 
 function startWave(){
   wave++;raidEnd=0;spawnLeft=raidSize(wave);spawnClock=.15;nextWave=0;raidCount={};scoreHit('horn');
   if(wave>=HUMAN_DAY)sendBuilder();
-  nextBuilder=wave>=TWO_ROADS_DAY?9:0;
+  nextBuilder=wave>=HUMAN_DAY+ONE_ROAD_DAYS?9:0;  // one bulldozer on its first day and the day after, then a second one 9 s into each raid
 }
 function makeEnemy(type,x,y,day=wave){
   let I=ENEMY_INFO[type],extra=Math.max(0,day-1),maxHp=I.hp*Math.pow(1.1,extra);
