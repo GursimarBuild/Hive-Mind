@@ -349,3 +349,6 @@ main{max-width:none;margin:0;padding:0}
 /* Quips have the whole bottom of the screen now. */
 .quip{bottom:22px;max-width:min(560px,calc(100% - 40px))}
 @media(max-width:1100px){.quip{top:auto;bottom:22px;max-width:calc(100% - 40px)}}
+/* The gas bee before pesticide is introduced: a greyed-out "???" at the bottom of the nursery. */
+.egg-panel .hatch-types>button[data-hatch].locked,.egg-panel .hatch-types>button[data-hatch].locked:disabled{opacity:.35;filter:grayscale(1) brightness(.8);cursor:not-allowed}
+.egg-panel .hatch-types>button[data-hatch].locked small{visibility:hidden}
