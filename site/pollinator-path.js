@@ -22,11 +22,14 @@ const MAP_ZOOM=.78;                  // how close the camera is: below 1 pulls b
 const EGG_TIME=38,EGG_MIN=6;         // seconds per egg on its own (no food), and the fastest an egg can ever come
 const EGG_FOOD_BONUS=1.5,EGG_MAX=4;  // seconds each food takes off the timer; the timer pauses at this many eggs
 const FOOD_PER_TRIP=2,GATHER_TIME=1.8; // food a farmer carries home per trip (native groves give double), and seconds spent gathering
-const RAID_BASE=4,RAID_GROWTH=1.5;   // raiders on day 1, and how much bigger each day's raid is
+const RAID_BASE=4,RAID_GROWTH=2;     // raiders on day 1, and how many more join each day's raid
+const RAID_CAP={bear:4,hornet:4,cloud:3},CAP_LIFT_DAY=8;  // the most of each per raid; from CAP_LIFT_DAY on each cap grows by one a day
+const POISON_TIME=8;                 // seconds pesticide must sit on a flower bed to kill it for good
+const ROAD_HALF=55,ROAD_START=.46,ROAD_STEP=.05,BULLDOZE_TIME=5.5;  // half a road's width; how far from the hive the first road runs and how much closer each day's comes (share of the screen); seconds under the bulldozer that kill a bee
 const RAID_WARNING=10,FIRST_RAID_IN=22,NEXT_RAID_IN=15;  // seconds of calm before the first raid, and before each later one
 const STING={reach:22.5,time:.36};     // soldier attack: how close it must be, and how long one lunge takes
 const GAS_FAN={range:82,dps:27,push:16}; // gas bee attack: fan reach, cloud damage per second, how fast the cloud is blown back
-const HUMAN_DAY=5;                   // the first day a builder paves a grove
+const HUMAN_DAY=5;                   // the first day the bulldozer paves a road
 /* The day each threat is introduced, and the mix of raiders on each day (weights). After the last entry the game is endless. */
 const DAY_INTRO={2:'hornet',3:'cloud',4:'bear',5:'human'};
 const RAID_MIX=[null,{ant:1},{ant:.55,hornet:.45},{ant:.4,hornet:.25,cloud:.35},{ant:.35,hornet:.2,cloud:.2,bear:.25},{ant:.3,hornet:.25,cloud:.22,bear:.23}];
@@ -44,7 +47,7 @@ ant:{name:'ANT',counter:'soldier',tip:'soldiers sting it',hp:22,speed:30,damage:
 hornet:{name:'HORNET',counter:'soldier',tip:'soldiers sting it',hp:50,speed:44,damage:7,beeDmg:6,reach:30,every:1,size:62},
 cloud:{name:'PESTICIDE',counter:'gas',tip:'only gas bees clear it',hp:40,speed:13,damage:12,size:84},
 bear:{name:'BEAR',counter:'soldier',tip:'needs several soldiers',hp:80,speed:15,damage:14,beeDmg:6,reach:50,every:1.3,size:105},  // drawn 1.7x as big as a hornet
-human:{name:'BUILDER',counter:null,tip:'no bee can stop it',hp:1,speed:44,damage:0,size:104}};
+human:{name:'BULLDOZER',counter:null,tip:'keep your bees out of its way',hp:1,speed:70,damage:0,size:166}};
 const NO_COUNTER='#8d8a80';
 function art(file){let i=new Image();i.src='assets/'+file;return i}
 const ready=i=>!!(i&&i.complete&&i.naturalWidth);
@@ -129,7 +132,7 @@ function resetWorld(){
   worldId++;hatchBusy=false;paused=false;collapse=null;
   $('#hatchFx').classList.remove('active','cracking');$('#hatchFx').hidden=true;closeIntroNow();$('#quip').classList.remove('show');
   health=100;hiveHitFlash=0;gameElapsed=0;wave=0;spawnLeft=0;spawnClock=0;nextWave=6;raidEnd=0;
-  bees=[];enemies=[];particles=[];puffs=[];interlude=null;
+  bees=[];enemies=[];particles=[];puffs=[];interlude=null;roads=[];raidCount={};
   eggs=[];eggTimer=EGG_TIME;eggAge=0;exploredAreas=[];scoutMarkers=[];flowerGroves=[];fogFullyRevealed=false;
   selection=[];pings=[];floaters=[];drag=null;ended=false;outerRing=1;quipLast=-99;quipSeen={};
 }
@@ -164,7 +167,8 @@ function hud(){
 /* Quips: one-line comments on what just happened to the hive and why it matters. At most one every 9 seconds, and each kind at most once every 45. */
 const QUIPS={
 paved:'A grove is gone under asphalt. Fewer flowers means fewer eggs.',
-cloudHive:'Pesticide reached the brood. Even a small dose weakens a whole colony.',
+withered:'Pesticide killed a flower bed. Nothing will grow there again.',
+crushed:'A bee was caught under the bulldozer.',
 cloudBee:'Pesticide makes bees sick and lost. Only a Gas Bee can fan it away.',
 farmerLost:'A Farmer is gone. Every lost forager means less food for the young.',
 soldierLost:'A Soldier fell defending the hive.',
@@ -185,18 +189,25 @@ function hitHive(dmg){
 }
 
 /* ================= RAIDS ================= */
-const raidSize=day=>Math.ceil(RAID_BASE*Math.pow(RAID_GROWTH,day-1));
+/* Raids grow slowly, and bears, hornets and pesticide are capped per raid, so the pressure comes from losing the meadow, not from a swarm. */
+const raidSize=day=>RAID_BASE+RAID_GROWTH*(day-1);
 const raidMix=day=>RAID_MIX[Math.min(day,RAID_MIX.length-1)];
+const raidCap=(type,day)=>type in RAID_CAP?RAID_CAP[type]+Math.max(0,day-CAP_LIFT_DAY+1):Infinity;
+let raidCount={};  // how many of each type this raid has sent so far
 function startWave(){
-  wave++;raidEnd=0;spawnLeft=raidSize(wave);spawnClock=.15;nextWave=0;scoreHit('horn');
+  wave++;raidEnd=0;spawnLeft=raidSize(wave);spawnClock=.15;nextWave=0;raidCount={};scoreHit('horn');
   if(wave>=HUMAN_DAY)sendBuilder();
 }
 function makeEnemy(type,x,y,day=wave){
   let I=ENEMY_INFO[type],extra=Math.max(0,day-1),maxHp=I.hp*Math.pow(1.1,extra);
   return{type,x,y,hp:maxHp,maxHp,speed:I.speed+Math.min(8,day*.6),damage:Math.ceil(I.damage*Math.pow(1.08,extra)),dead:false,attackCool:0,stun:0,hitFlash:0,fanned:0,face:1,seed:Math.random()*10};
 }
-/* Pick a raider type from the day's weights. */
-function rollType(day){let mix=raidMix(day),r=Math.random(),last;for(const t in mix){last=t;if((r-=mix[t])<=0)return t}return last}
+/* Pick a raider type from the day's weights, leaving out any type that has reached its cap for this raid. */
+function rollType(day){
+  let mix=Object.entries(raidMix(day)).filter(([t])=>(raidCount[t]||0)<raidCap(t,day)),sum=mix.reduce((s,[,v])=>s+v,0),r=Math.random()*sum;
+  for(const[t,v]of mix)if((r-=v)<=0)return t;
+  return mix.length?mix[mix.length-1][0]:'ant';
+}
 function spawn(){
   let pad=34,x,y,boxes=hudBoxes(60,60,60);
   for(let k=0;k<30;k++){
@@ -206,33 +217,67 @@ function spawn(){
     for(let s=0;s<=220&&ok;s+=20)if(underHud(x+(w*.5-x)/d*s,y+(h*.5-y)/d*s,boxes))ok=false;
     if(ok)break;
   }
-  enemies.push(makeEnemy(rollType(wave),x,y));
+  let type=rollType(wave);raidCount[type]=(raidCount[type]||0)+1;enemies.push(makeEnemy(type,x,y));
 }
-/* The builder: from HUMAN_DAY on, one machine drives in each day, paves over a flower grove and leaves. Nothing can stop it. */
+/* The bulldozer: from HUMAN_DAY on, it drives one straight road across the meadow each day and paves everything under it for good:
+   grass, flowers and scout spots. The first road runs near the edge and each day's runs closer to the hive, along whichever line tears
+   through the most flowers. Nothing can stop it; a bee caught under it dies after BULLDOZE_TIME seconds, so the player must move bees away.
+   A road is stored as its two ends in screen fractions (so it survives a resize) and s, how much of it is paved so far (0 to 1). */
+let roads=[];
+const roadEnds=r=>({ax:r.ax*w,ay:r.ay*h,bx:r.bx*w,by:r.by*h});
+/* Distance from (x, y) to the paved part of a road, plus the road's unit normal, for pushing things off it. */
+function roadDist(r,x,y){
+  let{ax,ay,bx,by}=roadEnds(r),dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1,t=Math.min(r.s,clamp01(((x-ax)*dx+(y-ay)*dy)/(L*L)));
+  return{d:Math.hypot(ax+dx*t-x,ay+dy*t-y),side:((x-ax)*-dy+(y-ay)*dx)/L,nx:-dy/L,ny:dx/L};
+}
+const paved=(x,y,pad=0)=>roads.some(r=>roadDist(r,x,y).d<ROAD_HALF+pad);
+/* The nearest spot beside the finished road(s) to p: bees never settle on pavement. A road still being driven does not count, so a bee
+   posted in the bulldozer's way keeps flying back into the blade and is hurt until the player moves it. */
+function offRoad(p){
+  let q={x:p.x,y:p.y};
+  for(const r of roads){if(r.s<1)continue;let o=roadDist(r,q.x,q.y);if(o.d<ROAD_HALF+14){let s=o.side<0?-1:1,push=ROAD_HALF+16-Math.abs(o.side);q.x+=o.nx*s*push;q.y+=o.ny*s*push}}
+  return q;
+}
 function sendBuilder(){
-  let open=flowerGroves.filter(g=>!g.gone&&!g.doomed),known=open.filter(g=>g.discovered),pool=known.length?known:open;
-  if(!pool.length)return;
-  let g=pool[Math.floor(Math.random()*pool.length)],fromLeft=g.u<.5,e=makeEnemy('human',fromLeft?-80:w+80,g.v*h);
-  e.grove=g;e.state='in';e.t=0;e.exit={x:e.x,y:e.y};e.face=fromLeft?1:-1;e.heading=Math.atan2(g.v*h-8-e.y,g.u*w-e.x);g.doomed=true;enemies.push(e);sfx('worker');
+  let m=Math.min(w,h),d=Math.max(ringRadius(1)+ROAD_HALF+30,m*(ROAD_START-ROAD_STEP*(wave-HUMAN_DAY))),best=null;
+  for(let k=0;k<24;k++){
+    /* A line at distance d from the hive, at angle a, clipped to the meadow plus a margin so it starts and ends off screen. */
+    let a=(k+Math.random()*.5)/24*Math.PI*2,nx=Math.cos(a),ny=Math.sin(a),cx=w*.5+nx*d,cy=h*.5+ny*d,tx=-ny,ty=nx,lo=-1e9,hi=1e9;
+    for(const[p,v,max]of[[cx,tx,w],[cy,ty,h]]){if(Math.abs(v)<1e-6){if(p<-150||p>max+150)hi=lo}else{let s1=(-150-p)/v,s2=(max+150-p)/v;lo=Math.max(lo,Math.min(s1,s2));hi=Math.min(hi,Math.max(s1,s2))}}
+    if(hi-lo<300)continue;
+    let r={ax:(cx+tx*lo)/w,ay:(cy+ty*lo)/h,bx:(cx+tx*hi)/w,by:(cy+ty*hi)/h,s:1},score=Math.random()*.5;
+    for(const g of flowerGroves)if(!g.gone&&roadDist(r,g.u*w,g.v*h).d<ROAD_HALF+30)score+=g.discovered?2:1;
+    if(!best||score>best.score)best={r,score};
+  }
+  if(!best)return;
+  let r=best.r;r.s=0;roads.push(r);
+  let{ax,ay,bx,by}=roadEnds(r),e=makeEnemy('human',ax,ay);
+  e.road=r;e.heading=Math.atan2(by-ay,bx-ax);e.lit=0;enemies.push(e);sfx('worker');
 }
-/* heading = the direction the machine is driving (radians). Its bucket always points that way; it turns smoothly when it reverses out. */
+/* heading = the direction the machine is driving (radians); its blade always points that way. */
 function updateBuilder(e,dt){
-  let g=e.grove,p={x:g.u*w,y:g.v*h-8},px=e.x,py=e.y;
-  if(e.state==='in'){if(step(e,p,e.speed,dt)<10){e.state='pave';e.t=0;g.paving=true;sfx('worker')}}
-  else if(e.state==='pave'){
-    e.t+=dt;g.paved=Math.min(1,e.t/3.5);
-    let fx=e.x+Math.cos(e.heading)*44,fy=e.y+Math.sin(e.heading)*44;  // dust flies off the bucket
-    if(Math.random()<dt*14)particles.push({x:fx+(Math.random()-.5)*50,y:fy+(Math.random()-.5)*30,vx:(Math.random()-.5)*60,vy:-20-Math.random()*30,life:.45,color:'#8f8a80'});
-    if(e.t>=3.5){g.gone=true;g.paving=false;e.state='out';e.face*=-1;quip(flowerGroves.some(f=>!f.gone)?'paved':'noGroves')}
-  }else if(step(e,e.exit,e.speed*1.5,dt)<12)e.dead=true;
-  let mx=e.x-px,my=e.y-py;
-  if(mx*mx+my*my>1e-6){let want=Math.atan2(my,mx),turn=((want-e.heading)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI;e.heading+=turn*Math.min(1,dt*5)}
+  let r=e.road,{ax,ay,bx,by}=roadEnds(r),len=Math.hypot(bx-ax,by-ay)||1;
+  r.s=Math.min(1,r.s+e.speed*dt/len);e.x=ax+(bx-ax)*r.s;e.y=ay+(by-ay)*r.s;e.heading=Math.atan2(by-ay,bx-ax);
+  let fx=e.x+Math.cos(e.heading)*60,fy=e.y+Math.sin(e.heading)*60;  // dust flies off the blade
+  if(Math.random()<dt*14)particles.push({x:fx+(Math.random()-.5)*60,y:fy+(Math.random()-.5)*40,vx:(Math.random()-.5)*60,vy:-20-Math.random()*30,life:.45,color:'#8f8a80'});
+  if((e.lit-=dt)<=0){e.lit=.5;exploredAreas.push({x:e.x,y:e.y,r:120})}  // the fog lifts behind it, so the player sees what was lost
+  for(const g of flowerGroves)if(!g.gone&&Math.hypot(g.u*w-e.x,g.v*h-e.y)<ROAD_HALF+30){g.gone=true;g.paved=1;g.discovered=true;g.reveal=1;quip(flowerGroves.some(f=>!f.gone)?'paved':'noGroves')}
+  scoutMarkers=scoutMarkers.filter(m=>Math.hypot(m.x-e.x,m.y-e.y)>ROAD_HALF+20);
+  /* Bees in its way are shoved ahead of the blade and hurt for as long as they stay there. */
+  let hx=Math.cos(e.heading),hy=Math.sin(e.heading);
+  for(const b of bees){
+    if(b.dead||Math.hypot(b.x-e.x,b.y-e.y)>=ROAD_HALF+6)continue;
+    let along=(b.x-e.x)*hx+(b.y-e.y)*hy,front=ROAD_HALF*.8;
+    if(along<front){b.x+=hx*(front-along);b.y+=hy*(front-along)}
+    damageBee(b,b.maxHealth/BULLDOZE_TIME*dt,'human');
+  }
+  if(r.s>=1)e.dead=true;
 }
 /* Flower groves sit beside scout markers, so a grove can only ever turn up where a bee has scouted. Two of them are native wildflowers. */
 function makeFlowerGroves(){
   flowerGroves=[];
   let spots=scoutMarkers.slice().sort(()=>Math.random()-.5).slice(0,8),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  spots.forEach((m,i)=>{let a=Math.random()*6.283,d=18+Math.random()*26;flowerGroves.push({u:clamp((m.x+Math.cos(a)*d)/w,.07,.93),v:clamp((m.y+Math.sin(a)*d*.7)/h,.12,.9),i,seed:Math.random()*1000,reveal:0,discovered:false,paved:0,paving:false,gone:false,native:i<2})});
+  spots.forEach((m,i)=>{let a=Math.random()*6.283,d=18+Math.random()*26;flowerGroves.push({u:clamp((m.x+Math.cos(a)*d)/w,.07,.93),v:clamp((m.y+Math.sin(a)*d*.7)/h,.12,.9),i,seed:Math.random()*1000,reveal:0,discovered:false,paved:0,gone:false,native:i<2})});
 }
 const grovePos=g=>({x:g.u*w,y:g.v*h}),scoutRadius=()=>Math.min(w,h)*.27;
 function hiveLight(){return{rx:Math.min(w*.23,260),ry:Math.min(h*.22,220)}}
@@ -246,7 +291,7 @@ function scoutDiscovery(b){
   found.forEach(g=>g.discovered=true);
   if(found.some(g=>g.native&&!g.gone))quip('native');
 }
-function nearestGrove(b){let best=null,bd=1e9;for(const g of flowerGroves){if(!g.discovered||g.gone||g.paving)continue;let d=Math.hypot(g.u*w-b.x,g.v*h-b.y);if(d<bd){bd=d;best=g}}return best}
+function nearestGrove(b){let best=null,bd=1e9;for(const g of flowerGroves){if(!g.discovered||g.gone)continue;let d=Math.hypot(g.u*w-b.x,g.v*h-b.y);if(d<bd){bd=d;best=g}}return best}
 /* Canvas-space rectangles of the HUD panels, grown by the given padding, so nothing on the field hides or appears behind them. */function hudBoxes(px,top,bottom){let c=canvas.getBoundingClientRect();return[...document.querySelectorAll('.hud.top>div,.egg-panel,.coach.show,.game-fullscreen,.game-sound,.game-help')].filter(el=>el.offsetParent).map(el=>{let r=el.getBoundingClientRect();return{l:(r.left-c.left-px)/MAP_ZOOM,r:(r.right-c.left+px)/MAP_ZOOM,t:(r.top-c.top-top)/MAP_ZOOM,b:(r.bottom-c.top+bottom)/MAP_ZOOM}})}function underHud(x,y,boxes){return boxes.some(b=>x>b.l&&x<b.r&&y>b.t&&y<b.b)}
 function makeScoutMarkers(){scoutMarkers=[];let wide=w>=h,xs=wide?[.1,.3,.5,.7,.9]:[.16,.5,.84],ys=wide?[.2,.5,.8]:[.12,.31,.5,.69,.88];for(const v of ys)for(const u of xs){if(u===.5&&v===.5)continue;scoutMarkers.push({u,v,x:u*w,y:v*h,active:false,assignedBee:null,phase:Math.random()*6})}placeScoutMarkers()}function placeScoutMarkers(){let boxes=hudBoxes(28,46,22),placed=[],hiveR=Math.min(150,Math.max(108,w*.14))*.6+24,clear=(x,y)=>x>26&&x<w-26&&y>22&&y<h-46&&Math.hypot(x-w*.5,y-h*.5)>hiveR&&!boxes.some(b=>x>b.l&&x<b.r&&y>b.t&&y<b.b)&&placed.every(p=>Math.hypot(p.x-x,p.y-y)>64);for(const m of scoutMarkers){let bx=m.u*w,by=m.v*h;m.x=bx;m.y=by;search:for(let r=0;r<=Math.max(w,h);r+=8)for(let k=0;k<(r?16:1);k++){let a=k/16*Math.PI*2,x=bx+Math.cos(a)*r,y=by+Math.sin(a)*r;if(clear(x,y)){m.x=x;m.y=y;break search}}placed.push(m)}}function hiveSize(){return Math.min(150,Math.max(108,w*.14))}function ringRadius(i){return hiveSize()*.45+40+52*i}function ringCap(i){return 8+4*i}function inRings(x,y){return Math.hypot(x-w*.5,y-h*.5)<ringRadius(outerRing)+22}function step(b,t,speed,dt){let dx=t.x-b.x,dy=t.y-b.y,d=Math.hypot(dx,dy)||1;if(d>speed*dt){b.x+=dx/d*speed*dt;b.y+=dy/d*speed*dt}return d}/* Guards stand in rings around the hive, alternating gas, soldier, gas, soldier. A ring fills before the next one starts. */
 function assignRings(){let guards=bees.filter(b=>!b.dead&&b.type!=='farmer'&&b.mode==='guard').sort((a,c)=>a.id-c.id),gas=guards.filter(b=>b.type==='gas'),sol=guards.filter(b=>b.type==='soldier'),order=[];while(gas.length||sol.length){if(gas.length)order.push(gas.shift());if(sol.length)order.push(sol.shift())}let ring=0,start=0;outerRing=1;order.forEach((b,i)=>{while(i>=start+ringCap(ring)){start+=ringCap(ring);ring++}b.ring=ring;b.slot=i-start;b.ringCount=Math.min(ringCap(ring),order.length-start);outerRing=Math.max(outerRing,ring)})}function slotPos(b){let n=b.ringCount||1,ring=b.ring||0,a=-Math.PI/2+((b.slot||0)+(ring%2)*.5)/n*Math.PI*2,r=ringRadius(ring);return{x:w*.5+Math.cos(a)*r,y:h*.5+Math.sin(a)*r}}function drawScoutMarkers(){for(const m of scoutMarkers){let pulse=1+.1*Math.sin(ambientTime*3+m.phase),r=rng(Math.floor(m.phase*1000)+boil()),alpha=m.active?.6:1;ctx.save();ctx.globalAlpha=.3*alpha;ctx.fillStyle=INK;ctx.beginPath();ctx.arc(m.x,m.y+2,21,0,Math.PI*2);ctx.fill();ctx.globalAlpha=alpha;ctx.fillStyle='#ffc72e';ctx.beginPath();ctx.arc(m.x,m.y,9,0,Math.PI*2);ctx.fill();hatch(ctx,m.x,m.y,10,10,'#e08a16',.8*alpha,r,2.4,-.7,2.2);scribble(ctx,m.x,m.y,10,10,INK,1.6,r,1,alpha);scribble(ctx,m.x,m.y,17*pulse,17*pulse,'#ffc72e',2.6,r,2,alpha*.95);ctx.restore()}}
@@ -290,13 +335,23 @@ function hurtEnemy(e,dmg){
   e.hp-=dmg;e.hitFlash=HIT_FLASH;
   if(e.hp<=0){e.dead=true;beeSfx(e.type==='cloud'?'clear':'defeat');burst(e.x,e.y,BURST[e.type],12)}
 }
+/* by = what hurt it. The bulldozer hurts every frame a bee is under it, so it only throws the odd puff of dust. */
 function damageBee(b,dmg,by){
-  b.health-=dmg;b.hitFlash=HIT_FLASH;burst(b.x,b.y,by==='cloud'?'#f3b6b0':'#d56d57',6);
-  if(by==='bear')sfx('bear');else if(by==='hornet')sfx('hornet');else quip('cloudBee');
+  b.health-=dmg;b.hitFlash=HIT_FLASH;
+  if(by==='human'){if(Math.random()<.12)burst(b.x,b.y,'#8f8a80',3)}else burst(b.x,b.y,by==='cloud'?'#f3b6b0':'#d56d57',6);
+  if(by==='bear')sfx('bear');else if(by==='hornet')sfx('hornet');else if(by==='cloud')quip('cloudBee');
   if(b.health>0)return;
   b.dead=true;b.fall=0;burst(b.x,b.y,'#cb4b40',12);
-  quip(b.type==='farmer'?(by==='hornet'?'hornet':'farmerLost'):'soldierLost');
+  quip(by==='human'?'crushed':b.type==='farmer'?(by==='hornet'?'hornet':'farmerLost'):'soldierLost');
 }
+/* Pesticide: the live flower bed it heads for (found ones first, then the nearest), what happens when it kills one, and when it blows away. */
+function cloudTarget(e){
+  let live=flowerGroves.filter(g=>!g.gone),pool=live.some(g=>g.discovered)?live.filter(g=>g.discovered):live,best=null,bd=1e9;
+  for(const g of pool){let d=Math.hypot(g.u*w-e.x,g.v*h-e.y);if(d<bd){bd=d;best=g}}
+  return best;
+}
+function witherGrove(g){g.gone=true;g.withered=true;g.poison=POISON_TIME;burst(g.u*w,g.v*h,'#8d8a80',16);quip('withered')}
+function dissipate(e){e.dead=true;burst(e.x,e.y,'#f3b6b0',10)}
 
 function update(dt){
   if(!playing||ended||paused)return;
@@ -338,19 +393,19 @@ function updateBee(b,dt){
 function arrive(b){
   let t=b.target||{x:b.x,y:b.y};b.target=null;
   if(!isExplored(t.x,t.y)||scoutMarkers.some(m=>Math.hypot(m.x-b.x,m.y-b.y)<60))scoutDiscovery(b);
-  b.post={x:t.x,y:t.y};b.mode=b.type==='farmer'?'idle':'hold';
+  b.post=offRoad(t);b.mode=b.type==='farmer'?'idle':'hold';
 }
 /* Farmers: idle -> outbound (to the nearest found grove) -> gather -> return (to the hive) -> idle. With no grove to
    visit they wait where they are, and set off by themselves as soon as one is found. */
 function farmerWork(b,speed,dt){
   let hive={x:w*.5,y:h*.5};
-  if(b.grove&&(b.grove.gone||b.grove.paving)){b.grove=null;b.pinned=false;if(b.mode!=='return')b.mode='idle'}
+  if(b.grove&&(b.grove.gone)){b.grove=null;b.pinned=false;if(b.mode!=='return')b.mode='idle'}
   if(b.mode!=='outbound'&&b.mode!=='gather'&&b.mode!=='return')b.mode='idle';
   if(b.mode==='idle'){
     let g=b.grove||nearestGrove(b);
     if(g){b.grove=g;b.post=null;b.mode='outbound'}
     else{
-      let a=b.phase*.6+b.id*1.7,c=b.post||hive,R=b.post?12:hiveSize()*.42;
+      let a=b.phase*.6+b.id*1.7,c=b.post?offRoad(b.post):hive,R=b.post?12:hiveSize()*.42;
       glide(b,{x:c.x+Math.cos(a)*R,y:c.y+Math.sin(a)*R*.7},dt);
     }
   }
@@ -375,6 +430,7 @@ function defend(b,T,speed,dt){
   if(b.mode==='escort'){let f=b.escort,a=b.phase*1.4+b.orbit;home={x:f.x+Math.cos(a)*30,y:f.y+Math.sin(a)*22};centre=f;reach=T.aggro}
   else if(b.mode==='hold'){home=b.post||(b.post={x:b.x,y:b.y});centre=home;reach=T.aggro}
   else{b.mode='guard';home=slotPos(b);centre=hive;reach=ringRadius(outerRing)+85}
+  if(roads.length&&b.mode!=='escort')home=offRoad(home);  // a post the road has reached moves to the roadside
   let foe=b.foe&&!b.foe.dead&&dist(b.foe,centre)<reach?b.foe:null;
   if(!foe){let bd=1e9;for(const e of enemies){if(e.dead||ENEMY_INFO[e.type].counter!==b.type||dist(e,centre)>=reach)continue;let d=dist(e,b);if(d<bd){bd=d;foe=e}}}
   b.foe=foe;
@@ -408,9 +464,18 @@ function updateEnemy(e,dt){
   if(e.stun>0){e.stun-=dt;return}
   let I=ENEMY_INFO[e.type],hive={x:w*.5,y:h*.5},goal=hive,prey=null,near=(test,range)=>{let best=null,bd=range;for(const b of bees){if(b.dead||!test(b))continue;let d=dist(b,e);if(d<bd){bd=d;best=b}}return best};
   if(e.type==='cloud'){
-    /* Pesticide poisons any bee it touches, except gas bees: their gear protects them. */
+    /* Pesticide never goes for the hive. It drifts to a flower bed, poisoning any bee it touches on the way (except gas bees: their
+       gear protects them), and settles there. A bed it sits on for POISON_TIME seconds dies for good, and the cloud blows away.
+       Fanning pushes it off the bed; it keeps creeping back until it is cleared. With no flowers left it lingers, then blows away. */
     let victim=near(b=>b.type!=='gas',62);
     if(victim&&e.attackCool<=0){damageBee(victim,7,'cloud');e.attackCool=1}
+    if(!e.grove||e.grove.gone)e.grove=cloudTarget(e);
+    let g=e.grove;
+    if(!g){if((e.linger=(e.linger??6)-dt)<=0)dissipate(e);return}
+    let p=grovePos(g);
+    if(dist(e,p)<16){if(!tutorial)g.poison=(g.poison||0)+dt;if(g.poison>=POISON_TIME){witherGrove(g);dissipate(e)}return}  // the gas-bee lesson never costs a bed
+    let ox=e.x;step(e,p,e.speed*(e.fanned>0?.3:1),dt);if(Math.abs(e.x-ox)>.01)e.face=e.x>ox?1:-1;
+    return;
   }
   else if(e.type==='hornet')prey=near(b=>b.type==='farmer',240)||near(()=>true,90);
   else if(e.type==='bear')prey=near(()=>true,60);
@@ -420,7 +485,7 @@ function updateEnemy(e,dt){
   }
   if(goal===hive&&dist(e,hive)<40){
     e.dead=true;burst(e.x,e.y,BURST[e.type],14);hitHive(e.damage);
-    if(e.type==='ant'){sfx('ant');quip('antHive')}else if(e.type==='cloud')quip('cloudHive');else if(e.type==='bear')quip('bearHive');else sfx('hornet');
+    if(e.type==='ant'){sfx('ant');quip('antHive')}else if(e.type==='bear')quip('bearHive');else sfx('hornet');
     return;
   }
   let ox=e.x;step(e,goal,e.speed*(e.fanned>0?.3:1),dt);if(Math.abs(e.x-ox)>.01)e.face=e.x>ox?1:-1;
@@ -449,13 +514,13 @@ function tapAt(x,y,shift){
   if(selection.length)command(x,y,null);
 }
 /* What a click at (x, y) would mean for the selected bees. Used for both the order itself and the label beside the cursor. */
-const ORDER_LABEL={patrol:'PATROL THE HIVE',farm:'BACK TO FARMING',grove:'FARM HERE',scout:'SCOUT',hold:'HOLD HERE',move:'FLY HERE',escort:'ESCORT'};
+const ORDER_LABEL={patrol:'PATROL THE HIVE',farm:'BACK TO FARMING',grove:'FARM HERE',scout:'SCOUT',hold:'HOLD HERE',move:'FLY HERE',escort:'ESCORT',paved:'PAVED'};
 function orderAt(x,y,sel){
   let combat=sel.filter(b=>b.type!=='farmer'),farmers=sel.filter(b=>b.type==='farmer'),
       marker=scoutMarkers.find(m=>Math.hypot(m.x-x,m.y-y)<34)||null,
       onHive=!marker&&Math.hypot(x-w*.5,y-h*.5)<hiveSize()*.5,
-      grove=!marker&&!onHive&&farmers.length?flowerGroves.find(g=>g.discovered&&!g.gone&&!g.paving&&Math.hypot(g.u*w-x,g.v*h-y)<50)||null:null,
-      kind=onHive?(combat.length?'patrol':'farm'):grove&&!combat.length?'grove':marker||!isExplored(x,y)?'scout':combat.length?'hold':'move';
+      grove=!marker&&!onHive&&farmers.length?flowerGroves.find(g=>g.discovered&&!g.gone&&Math.hypot(g.u*w-x,g.v*h-y)<50)||null:null,
+      kind=onHive?(combat.length?'patrol':'farm'):!marker&&paved(x,y)?'paved':grove&&!combat.length?'grove':marker||!isExplored(x,y)?'scout':combat.length?'hold':'move';
   return{combat,farmers,marker,grove,kind,x:marker?marker.x:x,y:marker?marker.y:y};
 }
 function command(x,y,farmer){
@@ -465,7 +530,7 @@ function command(x,y,farmer){
     if(!o.combat.length)return;
     o.combat.forEach(b=>escortFarmer(b,farmer));ping(farmer.x,farmer.y,'#ffc72e');selection=[];return;
   }
-  if(gate&&!o.marker)return;
+  if((gate&&!o.marker)||o.kind==='paved')return;  // bees cannot be sent onto a road
   sel.forEach((b,i)=>{
     if(o.kind==='patrol'||o.kind==='farm'){releaseBee(b);b.target=null;b.post=null;b.mode=b.type==='farmer'?'idle':'guard'}
     else if(o.grove&&b.type==='farmer'){releaseBee(b);b.target=null;b.post=null;b.grove=o.grove;b.pinned=true;b.mode='outbound'}
@@ -480,7 +545,7 @@ function draw(){
   let live=playing&&!ended&&!interlude&&!paused;
   hoverBee=live&&mouse&&!drag?pickBee(mouse.x,mouse.y):null;
   hoverEnemy=live&&mouse&&!hoverBee?enemies.find(e=>!e.dead&&Math.hypot(e.x-mouse.x,e.y-mouse.y)<Math.max(26,ENEMY_INFO[e.type].size*.5))||null:null;
-  drawGarden();drawFlowers();enemies.forEach(enemy);puffs.forEach(drawPuff);
+  drawGarden();drawRoads();drawFlowers();enemies.forEach(enemy);puffs.forEach(drawPuff);
   particles.forEach(p=>{p.x+=p.vx/60;p.y+=p.vy/60;ctx.globalAlpha=p.life/.45;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3);ctx.globalAlpha=1});
   drawEdgeFog();hive();bees.forEach(drawBee);drawExplorationFog();ctx.drawImage(treeLayer,0,0,w,h);
   drawRoutes();drawScoutMarkers();drawTutorial();drawInterlude();drawHitFlash();drawPings();drawFloaters();drawAim();drawHover();drawDrag();
@@ -508,37 +573,59 @@ function drawExplorationFog(){
   let L=hiveLight();light(w*.5,h*.5,L.rx,L.ry);
   for(const a of exploredAreas)light(a.x,a.y,a.r*1.12,a.r*1.12,.85);
   for(const b of bees)if(!b.dead)light(b.x,b.y,120,100);
-  for(const e of enemies)if(e.type==='human')light(e.x,e.y,110,100);
+  for(const e of enemies)if(e.type==='human')light(e.x,e.y,160,150);
   fogCtx.restore();ctx.globalAlpha=1-gone;ctx.drawImage(fogCanvas,0,0,w,h);ctx.globalAlpha=1;
 }
-/* Groves are only drawn once a bee has scouted them. Native wildflowers are purple, denser and labelled; a paved grove turns to asphalt. */
-const nativeFlowerSprite=()=>sprite('flowerNative',120,152,g=>{g.filter='hue-rotate(250deg) saturate(1.5)';g.drawImage(flowerSprite(),0,0)});
+/* Roads the bulldozer has paved: grey asphalt with inked edges and a dashed centre line, drawn over the grass and under everything else. */
+function drawRoads(){
+  for(const r of roads){
+    if(r.s<=0)continue;
+    let{ax,ay,bx,by}=roadEnds(r),ex=ax+(bx-ax)*r.s,ey=ay+(by-ay)*r.s,L=Math.hypot(bx-ax,by-ay)||1,nx=-(by-ay)/L,ny=(bx-ax)/L,
+        line=(o,width,color,alpha=1,dash=[])=>{ctx.globalAlpha=alpha;ctx.setLineDash(dash);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(ax+nx*o,ay+ny*o);ctx.lineTo(ex+nx*o,ey+ny*o);ctx.stroke()};
+    ctx.save();ctx.lineCap='butt';
+    line(0,ROAD_HALF*2+8,INK,.5);line(0,ROAD_HALF*2,'#5b5955');
+    for(const o of[-30,-12,14,33])line(o,3,'#3b3a37',.35,[7,13]);  // crayon grain
+    line(-ROAD_HALF+2,3,INK,.8);line(ROAD_HALF-2,3,INK,.8);line(0,4,'#e9d98a',.9,[24,18]);
+    ctx.restore();
+  }
+}
+/* Groves are only drawn once a bee has scouted them. Native wildflowers are purple and denser. A paved grove is asphalt under the road;
+   a bed pesticide is sitting on greys out as a ring counts down POISON_TIME, and a bed it killed stays grey and wilted for good. */
+const nativeFlowerSprite=()=>sprite('flowerNative',120,152,g=>{g.filter='hue-rotate(250deg) saturate(1.5)';g.drawImage(flowerSprite(),0,0)}),
+      deadFlowerSprite=()=>sprite('flowerDead',120,152,g=>{g.filter='grayscale(1) brightness(.72) contrast(.9)';g.drawImage(flowerSprite(),0,0)});
 function drawFlowers(){
   let scale=Math.max(.7,Math.min(1,w/1200));
   for(const f of flowerGroves){
     if(!f.discovered)continue;
-    let reveal=f.reveal,live=1-f.paved,r=rng(Math.floor(f.seed*1000)),rx=52*scale*(f.native?1.15:1),ry=34*scale*(f.native?1.15:1);
+    let reveal=f.reveal,r=rng(Math.floor(f.seed*1000)),rx=52*scale*(f.native?1.15:1),ry=34*scale*(f.native?1.15:1),
+        dead=!!f.withered,sick=dead?1:clamp01((f.poison||0)/POISON_TIME);
     ctx.save();ctx.translate(f.u*w,f.v*h);
     if(f.paved>0){
-      ctx.globalAlpha=f.paved*reveal;ctx.fillStyle='#5b5955';ctx.beginPath();ctx.ellipse(0,4,rx*1.25*f.paved,ry*1.25*f.paved,0,0,6.283);ctx.fill();
-      hatch(ctx,0,4,rx*1.2*f.paved,ry*1.2*f.paved,'#3b3a37',.7*f.paved,rng(f.i*13+5),5,-.3,3.5);
-      if(f.gone){ctx.globalAlpha=.9*reveal;ctx.setLineDash([10,9]);ctx.strokeStyle='#e9d98a';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(-rx*.85,4);ctx.lineTo(rx*.85,4);ctx.stroke();ctx.setLineDash([]);
-        scribble(ctx,0,4,rx*1.25,ry*1.25,INK,2,rng(f.i*7+boil()),1,.7*reveal);ctx.globalAlpha=reveal;handText('PAVED OVER',0,ry+28,13,'#5a5850')}
+      ctx.globalAlpha=reveal;ctx.fillStyle='#5b5955';ctx.beginPath();ctx.ellipse(0,4,rx*1.25,ry*1.25,0,0,6.283);ctx.fill();
+      hatch(ctx,0,4,rx*1.2,ry*1.2,'#3b3a37',.7,rng(f.i*13+5),5,-.3,3.5);
+      ctx.restore();continue;
     }
-    if(live>0){
-      let a=reveal*live;
-      hatch(ctx,0,4,rx,ry,f.native?'#c9a6e6':'#a9c873',.5*a,r,4.5,-.6,4);
-      let glow=(.6+.25*Math.sin(ambientTime*2.2+f.seed))*a,ring=rng(f.i*31+boil());
+    hatch(ctx,0,4,rx,ry,dead?'#9a978e':f.native?'#c9a6e6':'#a9c873',.5*reveal,r,4.5,-.6,4);
+    if(!dead){
+      let glow=(.6+.25*Math.sin(ambientTime*2.2+f.seed))*reveal*(1-sick),ring=rng(f.i*31+boil());
       if(f.native){scribble(ctx,0,4,rx*1.22,ry*1.3,'#8e44c9',3.4,ring,2,glow);scribble(ctx,0,4,rx*1.4,ry*1.5,'#d9b3f5',2,ring,1,glow*.8)}
       else scribble(ctx,0,4,rx*1.2,ry*1.28,'#ffc72e',2.4,ring,2,glow);
-      if(ready(flowerArt)){
-        let blooms=[],img=f.native?nativeFlowerSprite():flowerSprite();
-        for(let i=0;i<(f.native?8:5);i++)blooms.push({x:(r()-.5)*rx*1.5,y:(r()-.5)*ry*1.3+12,s:.75+r()*.45,flip:r()<.5,tilt:(r()-.5)*.35});
-        blooms.sort((p,q)=>p.y-q.y);ctx.globalAlpha=a;
-        for(const b of blooms){let dh=64*scale*b.s*(.75+.25*reveal)*(.4+.6*live),dw=dh*120/152;ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.tilt+Math.sin(ambientTime*1.3+b.x)*.05+f.paved*(b.flip?1:-1));if(b.flip)ctx.scale(-1,1);ctx.drawImage(img,-dw*.46,-dh*.94,dw,dh);ctx.restore()}
-      }
-      if(f.native&&live>.5){ctx.globalAlpha=a;handText('NATIVE WILDFLOWERS · 2× FOOD',0,ry+30,14,'#6a2a8a')}
     }
+    if(ready(flowerArt)){
+      let blooms=[],img=f.native?nativeFlowerSprite():flowerSprite();
+      for(let i=0;i<(f.native?8:5);i++)blooms.push({x:(r()-.5)*rx*1.5,y:(r()-.5)*ry*1.3+12,s:.75+r()*.45,flip:r()<.5,tilt:(r()-.5)*.35});
+      blooms.sort((p,q)=>p.y-q.y);
+      for(const b of blooms){
+        let dh=64*scale*b.s*(.75+.25*reveal)*(1-.3*sick),dw=dh*120/152;  // poisoned flowers shrink and droop
+        ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.tilt+(dead?0:Math.sin(ambientTime*1.3+b.x)*.05)+sick*.7*(b.flip?1:-1));if(b.flip)ctx.scale(-1,1);
+        if(sick<1){ctx.globalAlpha=reveal;ctx.drawImage(img,-dw*.46,-dh*.94,dw,dh)}
+        if(sick>0){ctx.globalAlpha=reveal*sick;ctx.drawImage(deadFlowerSprite(),-dw*.46,-dh*.94,dw,dh)}
+        ctx.restore();
+      }
+    }
+    /* The countdown: a ring that fills in the pesticide's colour while a cloud sits on the bed. */
+    if(!dead&&sick>0){let R=rx*1.45;ctx.globalAlpha=reveal;ctx.lineCap='round';ctx.lineWidth=7;ctx.strokeStyle=INK;ctx.beginPath();ctx.arc(0,4,R,-Math.PI/2,-Math.PI/2+Math.PI*2*sick);ctx.stroke();ctx.lineWidth=4;ctx.strokeStyle='#e0607a';ctx.stroke()}
+    if(f.native&&!dead){ctx.globalAlpha=reveal*(1-sick);handText('NATIVE WILDFLOWERS · 2× FOOD',0,ry+30,14,'#6a2a8a')}
     ctx.restore();
   }
 }
@@ -718,9 +805,9 @@ function dawn(day){
 const INTROS={
 ant:{name:'Ant',text:'Ants march straight for the hive.',how:'soldiers sting them',box:150},
 hornet:{name:'Hornet',text:'Hornets hunt your farmers.',how:'soldiers sting them',box:190},
-cloud:{name:'Pesticide',text:'It poisons every bee it touches.',how:'only gas bees can clear it',box:240},
+cloud:{name:'Pesticide',text:'It settles on flowers and kills them.',how:'only gas bees can clear it',box:240},
 bear:{name:'Bear',text:'Slow, tough and after your honey.',how:'send many soldiers at once',box:190},
-human:{name:'Builder',text:'It paves over your flower groves.',how:'no bee can stop it',box:220}};
+human:{name:'Bulldozer',text:'It paves everything in its path, for good.',how:'keep your bees out of its way',box:220}};
 const INTRO_FLIP=.3,INTRO_HOLD=2.6,INTRO_DARK=.35,INTRO_REVEAL=INTRO_HOLD+INTRO_DARK;  // seconds per flip-book drawing; when the last drawing starts fading to black; how long that fade takes
 let intro=null;
 const introCard=$('#introCard'),introCtx=$('#introCanvas').getContext('2d');
@@ -795,11 +882,11 @@ const GAS_LESSON_STEPS=[
 {text:'Pesticide. Soldiers can’t stop it.',enter:t=>{t.demo=tutorialEnemy('cloud',-2.2,0,9,6)},focus:t=>t.demo&&!t.demo.dead?{x:t.demo.x,y:t.demo.y,r:40}:null},
 {text:'Hatch a gas bee.',only:'gas',dom:'[data-hatch="gas"]',keep:t=>{if(!eggs.length&&!hatchBusy&&!bees.some(b=>!b.dead&&b.type==='gas'))layEgg()},done:()=>bees.some(b=>!b.dead&&b.type==='gas')},
 {text:'Click your gas bee, then the cloud.',focus:()=>[...typeFocus('gas'),...foeFocus()],keep:t=>{if(!enemies.some(e=>!e.dead&&e.type==='cloud')&&!t.cleared){if(t.demo&&t.demo.hp<=0)t.cleared=true;else t.demo=tutorialEnemy('cloud',-2.2,0,9,6)}},done:t=>t.cleared},
-{text:'Keep a gas bee near the hive.',enter:()=>scoreHit('chime'),button:'GOT IT →',finish:true}];
+{text:'Pesticide kills flowers. Guard them with gas bees.',enter:()=>scoreHit('chime'),button:'GOT IT →',finish:true}];
 function setupTutorial(){
   resetWorld();nextWave=0;makeScoutMarkers();
   let m=scoutMarkers.reduce((a,c)=>Math.hypot(c.u-.84,c.v-.5)<Math.hypot(a.u-.84,a.v-.5)?c:a),farmer=makeBee('farmer',w*.5,h*.62,'idle');
-  scoutMarkers=[m];flowerGroves=[{u:m.x/w,v:m.y/h,i:0,seed:Math.random()*1000,reveal:0,discovered:false,paved:0,paving:false,gone:false,native:false}];bees.push(farmer);
+  scoutMarkers=[m];flowerGroves=[{u:m.x/w,v:m.y/h,i:0,seed:Math.random()*1000,reveal:0,discovered:false,paved:0,gone:false,native:false}];bees.push(farmer);
   /* readyAt: 2.1 s for the fade in from the opening (see endCinema), then the hold. */
   tutorial={kind:'ants',steps:TRAINING_STEPS,step:0,max:-1,marker:m,grove:flowerGroves[0],soldier:null,gas:null,farmer,food:0,focusEl:null,failed:false,readyAt:ambientTime+2.1+TUTORIAL_HOLD,spotAt:0,holes:[]};
   hud();drawEggs();$('.game-shell').classList.add('tutorial');setTutorialStep(0);
