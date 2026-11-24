@@ -800,8 +800,8 @@ function setupTutorial(){
   resetWorld();nextWave=0;makeScoutMarkers();
   let m=scoutMarkers.reduce((a,c)=>Math.hypot(c.u-.84,c.v-.5)<Math.hypot(a.u-.84,a.v-.5)?c:a),farmer=makeBee('farmer',w*.5,h*.62,'idle');
   scoutMarkers=[m];flowerGroves=[{u:m.x/w,v:m.y/h,i:0,seed:Math.random()*1000,reveal:0,discovered:false,paved:0,paving:false,gone:false,native:false}];bees.push(farmer);
-  /* readyAt: 1.5 s for the fade in from the opening, then the hold. */
-  tutorial={kind:'ants',steps:TRAINING_STEPS,step:0,max:-1,marker:m,grove:flowerGroves[0],soldier:null,gas:null,farmer,food:0,focusEl:null,failed:false,readyAt:ambientTime+1.5+TUTORIAL_HOLD,spotAt:0,holes:[]};
+  /* readyAt: 2.1 s for the fade in from the opening (see endCinema), then the hold. */
+  tutorial={kind:'ants',steps:TRAINING_STEPS,step:0,max:-1,marker:m,grove:flowerGroves[0],soldier:null,gas:null,farmer,food:0,focusEl:null,failed:false,readyAt:ambientTime+2.1+TUTORIAL_HOLD,spotAt:0,holes:[]};
   hud();drawEggs();$('.game-shell').classList.add('tutorial');setTutorialStep(0);
 }
 function placeTutorialGrove(){let t=tutorial;if(!t||t.kind!=='ants'||t.grove.discovered||!scoutMarkers.includes(t.marker))return;t.grove.u=t.marker.x/w;t.grove.v=t.marker.y/h}
@@ -944,8 +944,7 @@ const openingScenes=[
 {line:'We need help.',image:'cutscene-open-2-order.webp',look:'baked',cue:'order'},
 {frames:['cutscene-open-3-felling.webp','cutscene-open-4-felling.webp','cutscene-open-5-felling.webp','cutscene-open-6-felling.webp'],holdFirst:1700,frameMs:330,look:'bars',cue:'felling',sounds:[[300,'saw'],[1700,'crack'],[2360,'crash']]},
 {image:'cutscene-open-7-flee.webp',look:'baked',cue:'escape'},
-{image:'cutscene-open-8-tree.webp',look:'baked',cue:'escape'},
-{image:'cutscene-stump.png',look:'baked',cue:'escape'}];
+{image:'cutscene-open-8-tree.webp',look:'baked',cue:'escape'}];
 openingScenes.forEach(s=>[s.image,...(s.frames||[])].forEach(f=>{if(f)art(f)}));  // preload so nothing flickers
 const DISSOLVE=1200;  // ms for one drawing to dissolve into the next (match the .cinema-image transition in the CSS)
 const cinemaEl=$('#opening-cinema'),cinemaLayers=[...document.querySelectorAll('#cinemaArt .cinema-image')],wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -954,7 +953,7 @@ function restart(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classLi
 /* One black layer over the whole game handles every fade: fadeTo(1) goes to black, fadeTo(0) comes back. While it is dark it swallows clicks. */
 function fadeTo(dark,ms=900){
   let el=$('#fade');if(dark===fadeLevel)return Promise.resolve();
-  fadeLevel=dark;el.style.transition=`opacity ${ms}ms ease`;el.style.opacity=dark;if(dark)el.classList.add('on');
+  fadeLevel=dark;el.style.transition=`opacity ${ms}ms ease-in-out`;el.style.opacity=dark;if(dark)el.classList.add('on');
   return wait(ms).then(()=>{if(!fadeLevel)el.classList.remove('on')});
 }
 async function throughBlack(fn){await fadeTo(1,700);fn();await wait(250);fadeTo(0,1000)}
@@ -995,7 +994,7 @@ async function endCinema(){
   if(cinema!==c)return;
   cinema=null;cinemaEl.hidden=true;
   if(c.done)c.done();
-  await wait(350);fadeTo(0,1100);
+  await wait(500);fadeTo(0,1600);
 }
 async function beginOpening(){
   if(cinema||starting)return;starting=true;
