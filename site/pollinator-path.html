@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Patrick+Hand&family=DM+Mono:wght@400;500&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pollinator-path.css?v=beta2">
+<link rel="stylesheet" href="pollinator-path.css?v=beta3">
 </head>
 <body>
 <main>
@@ -18,66 +18,51 @@
   <button id="soundToggle" class="game-sound" type="button" aria-label="Mute sound" title="Sound on / off">♪</button>
   <button id="help" class="game-help" type="button" aria-label="Show instructions" title="How to play">?</button>
 
-  <!-- Opening cutscene (letterboxed). Scenes are listed in openingScenes in the JS. -->
-  <div id="opening-cinema" class="opening-cinema" aria-label="Opening story" aria-live="polite" hidden>
-    <div class="cinema-frame">
-      <div class="cinema-art" id="cinemaArt"><img id="cinemaImage" class="cinema-image" alt=""><img id="cinemaImageNext" class="cinema-image cinema-image-next" alt=""></div>
-      <div class="cinema-vignette"></div>
-      <div id="cinemaImpact" class="cinema-impact" aria-hidden="true"></div>
-      <q id="cinemaSay" class="cinema-say" hidden></q>
-      <div class="letterbox letterbox-top"></div><div class="letterbox letterbox-bottom"></div>
-      <!-- One short chalk caption, written in the bottom black bar so it never covers the drawing. -->
-      <div class="cinema-title"><p id="cinemaLine"></p></div>
-      <div class="cinema-controls">
-        <button id="cinemaFullscreen" aria-label="Toggle fullscreen" title="Fullscreen">⛶</button>
-        <button id="cinemaSkip" title="Skip (Esc)">skip</button>
-        <button id="cinemaNext" aria-label="Next" title="Next (Space)">›</button>
-      </div>
-    </div>
+  <!-- Cutscene player for the opening and the ending: still drawings that dissolve into each other on a click. Scenes are listed in the JS. -->
+  <div id="opening-cinema" class="opening-cinema" aria-label="Story" aria-live="polite" hidden>
+    <div class="cinema-art" id="cinemaArt"><img class="cinema-image" alt=""><img class="cinema-image" alt=""></div>
+    <p id="cinemaCard" class="cinema-card" hidden></p>
+    <div class="letterbox letterbox-top"></div><div class="letterbox letterbox-bottom"></div>
+    <!-- One short caption, written in the bottom black bar so it never covers the drawing. -->
+    <div class="cinema-title"><p id="cinemaLine"></p></div>
+    <div id="cinemaPrompt" class="cinema-prompt">click to continue</div>
+    <button id="cinemaSkip" class="cinema-skip" type="button" title="Skip (Esc)">skip</button>
   </div>
 
   <div class="hud top">
     <div id="healthBox" class="health-box"><small><i class="hud-hive" aria-hidden="true"></i>HIVE HEALTH</small><div class="meter"><i id="healthBar"></i></div><b id="healthText">100 / 100</b></div>
-    <div class="wave"><small id="waveLabel">CALM BEFORE THE RAID</small><b id="waveText">DAY 1</b></div>
+    <!-- The day, and a bar that fills through the calm (up to the flag) and then the raid. -->
+    <div class="wave"><b id="waveText">DAY 1</b><div class="raid-bar" aria-hidden="true"><i id="raidFill"></i><span class="raid-flag"></span><span id="raidHead" class="raid-head"></span></div></div>
   </div>
   <!-- One-line comments about what is happening to the hive. Never blocks play. -->
   <div id="quip" class="quip" aria-live="polite"></div>
 
   <div class="egg-panel">
-    <div class="menu-toggle"><span>QUEEN’S NURSERY</span></div>
     <div id="hatchMenu" class="hatch-menu">
-      <div class="egg-stock"><p>EGGS READY <b id="eggCount">0</b></p><div id="egg-list"></div><small id="egg-empty">The queen is preparing an egg.</small><small id="eggNext" class="egg-next"></small></div>
-      <div class="hatch-types"><p>1 EGG = 1 BEE</p>
-        <button data-hatch="soldier" type="button" title="Hatch a soldier (1)"><span><b>SOLDIER <kbd>1</kbd></b><small>Stings raiders</small></span><em>HATCH</em></button>
-        <button data-hatch="gas" type="button" title="Hatch a gas bee (2)"><span><b>GAS BEE <kbd>2</kbd></b><small>Fans off pesticide</small></span><em>HATCH</em></button>
-        <button data-hatch="farmer" type="button" title="Hatch a farmer (3)"><span><b>FARMER <kbd>3</kbd></b><small>Scouts, brings food</small></span><em>HATCH</em></button>
+      <!-- The queen's eggs, and a thin bar that fills as the next one grows. -->
+      <div class="egg-stock"><div id="egg-list"></div><div class="egg-next" title="Next egg"><i id="eggBar"></i></div></div>
+      <div class="hatch-types">
+        <button data-hatch="soldier" type="button" title="Hatch a soldier (1)"><span><b>SOLDIER <kbd>1</kbd></b><small>Stings raiders</small></span></button>
+        <button data-hatch="gas" type="button" title="Hatch a gas bee (2)"><span><b>GAS BEE <kbd>2</kbd></b><small>Fans off pesticide</small></span></button>
+        <button data-hatch="farmer" type="button" title="Hatch a farmer (3)"><span><b>FARMER <kbd>3</kbd></b><small>Scouts, brings food</small></span></button>
       </div>
     </div>
   </div>
   <div id="hatchFx" class="hatch-fx" aria-hidden="true"><span class="egg-shell egg-left"></span><span class="egg-shell egg-right"></span><span class="hatch-spark">✦</span></div>
 
-  <div class="hud bottom">
-    <div id="message"><b>THE MEADOW IS QUIET</b><span>Scout the fog to find flowers.</span></div>
-    <div class="hint legend" aria-label="Bee types and hotkeys">
-      <span class="lg-soldier"><kbd>1</kbd><i class="bee-icon soldier"></i><b>SOLDIER</b> ants, hornets, bears</span>
-      <span class="lg-gas"><kbd>2</kbd><i class="bee-icon gas"></i><b>GAS BEE</b> pesticide</span>
-      <span class="lg-farmer"><kbd>3</kbd><i class="bee-icon farmer"></i><b>FARMER</b> food and scouting</span>
-      <small>click a bee, then a spot · drag a box for a squad · Esc cancels</small>
-    </div>
-  </div>
+  <!-- Tutorial spotlight: darkens everything except what the current step is about. Drawn by drawSpotlight() in the JS. -->
+  <canvas id="spotlight" class="spotlight" aria-hidden="true"></canvas>
 
-  <div id="dayCard" class="day-card" aria-live="polite"><small id="dayEyebrow"></small><b id="dayTitle"></b><span id="dayText"></span><button id="daySkip" type="button">skip →</button></div>
-
-  <!-- New-enemy cutscene: the first time each enemy appears, it is shown big on paper between the cinema bars,
-       with its name and the bee that beats it written in the bottom bar. Drawn on introCanvas by drawIntro() in the JS. -->
-  <div id="introCard" class="intro-card intro-cine" aria-live="polite" hidden>
+  <!-- New-enemy cutscene: a flip-book of a bee that ends in shadow, then the enemy on black with its name. Drawn by drawIntro() in the JS. -->
+  <div id="introCard" class="intro-card" aria-live="polite" hidden>
     <canvas id="introCanvas" width="960" height="540" aria-hidden="true"></canvas>
     <div class="letterbox letterbox-top"></div><div class="letterbox letterbox-bottom"></div>
-    <div class="intro-caption"><b id="introTitle"></b><span id="introCounter" class="intro-counter"></span></div>
-    <div class="intro-controls"><button id="introNext" type="button" aria-label="Continue" title="Continue (Space)">›</button></div>
+    <div class="intro-head"><small>NEW ENEMY:</small><b id="introTitle"></b></div>
+    <div class="intro-foot"><p id="introText"></p><span id="introCounter" class="intro-counter"></span></div>
+    <button id="introNext" class="intro-next" type="button" aria-label="Continue" title="Continue (Space)">›</button>
   </div>
 
-  <div id="coach" class="coach" aria-live="polite"><small id="coachStep">TRAINING</small><b id="coachTitle"></b><span id="coachText"></span><p id="coachTip" class="coach-tip" hidden></p><div class="coach-actions"><button id="coachBack" type="button">← previous</button><button id="coachSkip" class="ghost" type="button">skip training</button><em id="coachWait">your move…</em><button id="coachNext" type="button">NEXT →</button></div></div>
+  <div id="coach" class="coach" aria-live="polite"><span id="coachText"></span><div class="coach-actions"><button id="coachNext" type="button">NEXT →</button><button id="coachSkip" class="ghost" type="button">skip</button></div></div>
 
   <!-- Title screen. title-1 / title-2 are the two frames of the animated logo. -->
   <div id="overlay" class="overlay title-screen">
@@ -112,8 +97,11 @@
   </div></div>
 
   <!-- The ending plays in #opening-cinema (see endingScenes in the JS), then shows the How to Help page above. -->
+
+  <!-- Every fade to black and back goes through this one layer (fadeTo() in the JS). -->
+  <div id="fade" class="fade" aria-hidden="true"></div>
 </section>
 </main>
-<script src="pollinator-path.js?v=beta2"></script>
+<script src="pollinator-path.js?v=beta3"></script>
 </body>
 </html>
