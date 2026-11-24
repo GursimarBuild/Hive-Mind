@@ -23,9 +23,9 @@ const EGG_TIME=38,EGG_MIN=6;         // seconds per egg on its own (no food), an
 const EGG_FOOD_BONUS=1.5,EGG_MAX=4;  // seconds each food takes off the timer; the timer pauses at this many eggs
 const FOOD_PER_TRIP=2,GATHER_TIME=1.8; // food a farmer carries home per trip (native groves give double), and seconds spent gathering
 const RAID_BASE=4,RAID_GROWTH=2;     // raiders on day 1, and how many more join each day's raid
-const RAID_CAP={bear:4,hornet:4,cloud:3},CAP_LIFT_DAY=8;  // the most of each per raid; from CAP_LIFT_DAY on each cap grows by one a day
-const POISON_TIME=8;                 // seconds pesticide must sit on a flower bed to kill it for good
-const ROAD_HALF=55,ROAD_START=.46,ROAD_STEP=.05,BULLDOZE_TIME=5.5;  // half a road's width; how far from the hive the first road runs and how much closer each day's comes (share of the screen); seconds under the bulldozer that kill a bee
+const RAID_CAP={bear:[4,6],hornet:[4,6],cloud:[3,8]};  // [the most of each per raid, the day that cap starts growing by one a day]
+const POISON_TIME=8,CLOUD_DRIFT=60;  // seconds pesticide must sit on a flower bed to kill it for good; seconds a cloud with no flowers left to find floats around before it thins away
+const ROAD_HALF=55,ROAD_START=.46,ROAD_STEP=.05,BULLDOZE_TIME=5.5,TWO_ROADS_DAY=7;  // half a road's width; how far from the hive the first road runs and how much closer each day's comes (share of the screen); seconds under the bulldozer that kill a bee; the day it starts coming twice a day
 const RAID_WARNING=10,FIRST_RAID_IN=22,NEXT_RAID_IN=15;  // seconds of calm before the first raid, and before each later one
 const STING={reach:22.5,time:.36};     // soldier attack: how close it must be, and how long one lunge takes
 const GAS_FAN={range:82,dps:27,push:16}; // gas bee attack: fan reach, cloud damage per second, how fast the cloud is blown back
@@ -46,7 +46,7 @@ const ENEMY_INFO={
 ant:{name:'ANT',counter:'soldier',tip:'soldiers sting it',hp:22,speed:30,damage:7,size:34},
 hornet:{name:'HORNET',counter:'soldier',tip:'soldiers sting it',hp:50,speed:44,damage:7,beeDmg:6,reach:30,every:1,size:62},
 cloud:{name:'PESTICIDE',counter:'gas',tip:'only gas bees clear it',hp:40,speed:13,damage:12,size:84},
-bear:{name:'BEAR',counter:'soldier',tip:'needs several soldiers',hp:80,speed:15,damage:14,beeDmg:6,reach:50,every:1.3,size:105},  // drawn 1.7x as big as a hornet
+bear:{name:'BEAR',counter:'soldier',tip:'needs several soldiers',hp:110,speed:15,damage:16,beeDmg:8,reach:50,every:1.3,size:105},  // drawn 1.7x as big as a hornet
 human:{name:'BULLDOZER',counter:null,tip:'keep your bees out of its way',hp:1,speed:70,damage:0,size:166}};
 const NO_COUNTER='#8d8a80';
 function art(file){let i=new Image();i.src='assets/'+file;return i}
@@ -132,7 +132,7 @@ function resetWorld(){
   worldId++;hatchBusy=false;paused=false;collapse=null;
   $('#hatchFx').classList.remove('active','cracking');$('#hatchFx').hidden=true;closeIntroNow();$('#quip').classList.remove('show');
   health=100;hiveHitFlash=0;gameElapsed=0;wave=0;spawnLeft=0;spawnClock=0;nextWave=6;raidEnd=0;
-  bees=[];enemies=[];particles=[];puffs=[];interlude=null;roads=[];raidCount={};
+  bees=[];enemies=[];particles=[];puffs=[];interlude=null;roads=[];raidCount={};nextBuilder=0;
   eggs=[];eggTimer=EGG_TIME;eggAge=0;exploredAreas=[];scoutMarkers=[];flowerGroves=[];fogFullyRevealed=false;
   selection=[];pings=[];floaters=[];drag=null;ended=false;outerRing=1;quipLast=-99;quipSeen={};
 }
@@ -192,11 +192,12 @@ function hitHive(dmg){
 /* Raids grow slowly, and bears, hornets and pesticide are capped per raid, so the pressure comes from losing the meadow, not from a swarm. */
 const raidSize=day=>RAID_BASE+RAID_GROWTH*(day-1);
 const raidMix=day=>RAID_MIX[Math.min(day,RAID_MIX.length-1)];
-const raidCap=(type,day)=>type in RAID_CAP?RAID_CAP[type]+Math.max(0,day-CAP_LIFT_DAY+1):Infinity;
-let raidCount={};  // how many of each type this raid has sent so far
+const raidCap=(type,day)=>type in RAID_CAP?RAID_CAP[type][0]+Math.max(0,day-RAID_CAP[type][1]+1):Infinity;
+let raidCount={},nextBuilder=0;  // how many of each type this raid has sent so far; seconds until the day's second bulldozer
 function startWave(){
   wave++;raidEnd=0;spawnLeft=raidSize(wave);spawnClock=.15;nextWave=0;raidCount={};scoreHit('horn');
   if(wave>=HUMAN_DAY)sendBuilder();
+  nextBuilder=wave>=TWO_ROADS_DAY?9:0;
 }
 function makeEnemy(type,x,y,day=wave){
   let I=ENEMY_INFO[type],extra=Math.max(0,day-1),maxHp=I.hp*Math.pow(1.1,extra);
@@ -225,9 +226,9 @@ function spawn(){
    A road is stored as its two ends in screen fractions (so it survives a resize) and s, how much of it is paved so far (0 to 1). */
 let roads=[];
 const roadEnds=r=>({ax:r.ax*w,ay:r.ay*h,bx:r.bx*w,by:r.by*h});
-/* Distance from (x, y) to the paved part of a road, plus the road's unit normal, for pushing things off it. */
-function roadDist(r,x,y){
-  let{ax,ay,bx,by}=roadEnds(r),dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1,t=Math.min(r.s,clamp01(((x-ax)*dx+(y-ay)*dy)/(L*L)));
+/* Distance from (x, y) to the paved part of a road (or the whole planned road, with whole), plus the road's unit normal, for pushing things off it. */
+function roadDist(r,x,y,whole=false){
+  let{ax,ay,bx,by}=roadEnds(r),dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1,t=Math.min(whole?1:r.s,clamp01(((x-ax)*dx+(y-ay)*dy)/(L*L)));
   return{d:Math.hypot(ax+dx*t-x,ay+dy*t-y),side:((x-ax)*-dy+(y-ay)*dx)/L,nx:-dy/L,ny:dx/L};
 }
 const paved=(x,y,pad=0)=>roads.some(r=>roadDist(r,x,y).d<ROAD_HALF+pad);
@@ -238,15 +239,20 @@ function offRoad(p){
   for(const r of roads){if(r.s<1)continue;let o=roadDist(r,q.x,q.y);if(o.d<ROAD_HALF+14){let s=o.side<0?-1:1,push=ROAD_HALF+16-Math.abs(o.side);q.x+=o.nx*s*push;q.y+=o.ny*s*push}}
   return q;
 }
+/* Each road is a new bite out of the meadow: of 48 candidate lines (no nearer the hive than today's limit), the bulldozer takes the one
+   that paves the most untouched ground on screen, plus a bonus for every flower bed it would destroy. Ground within a road's width of an
+   old road does not count as untouched, so it never re-paves the same strip at a slightly different angle. */
 function sendBuilder(){
-  let m=Math.min(w,h),d=Math.max(ringRadius(1)+ROAD_HALF+30,m*(ROAD_START-ROAD_STEP*(wave-HUMAN_DAY))),best=null;
-  for(let k=0;k<24;k++){
+  let m=Math.min(w,h),near=ringRadius(1)+ROAD_HALF+30,far=Math.max(near,m*(ROAD_START-ROAD_STEP*(wave-HUMAN_DAY))),best=null,
+      planned=(x,y)=>roads.some(o=>roadDist(o,x,y,true).d<ROAD_HALF*2);
+  for(let k=0;k<48;k++){
     /* A line at distance d from the hive, at angle a, clipped to the meadow plus a margin so it starts and ends off screen. */
-    let a=(k+Math.random()*.5)/24*Math.PI*2,nx=Math.cos(a),ny=Math.sin(a),cx=w*.5+nx*d,cy=h*.5+ny*d,tx=-ny,ty=nx,lo=-1e9,hi=1e9;
+    let a=Math.random()*Math.PI*2,d=Math.max(near,far-Math.random()*m*.1),nx=Math.cos(a),ny=Math.sin(a),cx=w*.5+nx*d,cy=h*.5+ny*d,tx=-ny,ty=nx,lo=-1e9,hi=1e9;
     for(const[p,v,max]of[[cx,tx,w],[cy,ty,h]]){if(Math.abs(v)<1e-6){if(p<-150||p>max+150)hi=lo}else{let s1=(-150-p)/v,s2=(max+150-p)/v;lo=Math.max(lo,Math.min(s1,s2));hi=Math.min(hi,Math.max(s1,s2))}}
     if(hi-lo<300)continue;
-    let r={ax:(cx+tx*lo)/w,ay:(cy+ty*lo)/h,bx:(cx+tx*hi)/w,by:(cy+ty*hi)/h,s:1},score=Math.random()*.5;
-    for(const g of flowerGroves)if(!g.gone&&roadDist(r,g.u*w,g.v*h).d<ROAD_HALF+30)score+=g.discovered?2:1;
+    let r={ax:(cx+tx*lo)/w,ay:(cy+ty*lo)/h,bx:(cx+tx*hi)/w,by:(cy+ty*hi)/h,s:1},score=Math.random();
+    for(let s=lo;s<=hi;s+=40){let x=cx+tx*s,y=cy+ty*s;if(x>0&&x<w&&y>0&&y<h&&!planned(x,y))score++}
+    for(const g of flowerGroves)if(!g.gone&&roadDist(r,g.u*w,g.v*h).d<ROAD_HALF+30)score+=g.discovered?6:3;
     if(!best||score>best.score)best={r,score};
   }
   if(!best)return;
@@ -364,12 +370,13 @@ function update(dt){
     /* Eggs: EGG_TIME s each on their own. Food shortens the wait, but never below EGG_MIN s, and the timer pauses at EGG_MAX eggs. */
     if(eggs.length<EGG_MAX){eggTimer-=dt;eggAge+=dt;if(eggTimer<=0&&eggAge>=EGG_MIN){layEgg();eggTimer=EGG_TIME;eggAge=0}}
     /* The day: a calm countdown, the raid, then nightfall once every raider (and the builder) is gone. */
+    if(nextBuilder>0&&(nextBuilder-=dt)<=0)sendBuilder();
     if(spawnLeft){spawnClock-=dt;if(spawnClock<=0){spawn();spawnLeft--;spawnClock=Math.max(.3,1.1-wave*.08)}}
     else if(nextWave>0){
       let was=nextWave;nextWave-=dt;
       if(was>RAID_WARNING&&nextWave<=RAID_WARNING)scoreHit('horn');  // the raid bar's flag starts waving at the same moment
       if(nextWave<=0)startWave();
-    }else if(!enemies.length&&(raidEnd+=dt)>1.8){raidEnd=0;startInterlude(false);hud();return}
+    }else if(!enemies.length&&nextBuilder<=0&&(raidEnd+=dt)>1.8){raidEnd=0;startInterlude(false);hud();return}
   }
   assignRings();
   for(const b of bees)updateBee(b,dt);
@@ -466,12 +473,18 @@ function updateEnemy(e,dt){
   if(e.type==='cloud'){
     /* Pesticide never goes for the hive. It drifts to a flower bed, poisoning any bee it touches on the way (except gas bees: their
        gear protects them), and settles there. A bed it sits on for POISON_TIME seconds dies for good, and the cloud blows away.
-       Fanning pushes it off the bed; it keeps creeping back until it is cleared. With no flowers left it lingers, then blows away. */
+       Fanning pushes it off the bed; it keeps creeping back until it is cleared. With no flower bed left anywhere it floats around the
+       meadow from spot to spot, poisoning any bee it meets, until a gas bee clears it (or, after CLOUD_DRIFT seconds, it thins away). */
     let victim=near(b=>b.type!=='gas',62);
     if(victim&&e.attackCool<=0){damageBee(victim,7,'cloud');e.attackCool=1}
     if(!e.grove||e.grove.gone)e.grove=cloudTarget(e);
     let g=e.grove;
-    if(!g){if((e.linger=(e.linger??6)-dt)<=0)dissipate(e);return}
+    if(!g){
+      if((e.drift=(e.drift??CLOUD_DRIFT)-dt)<=0){dissipate(e);return}
+      if(!e.roam||dist(e,e.roam)<20)e.roam={x:w*(.12+Math.random()*.76),y:h*(.15+Math.random()*.7)};
+      let ox=e.x;step(e,e.roam,e.speed*(e.fanned>0?.3:1),dt);if(Math.abs(e.x-ox)>.01)e.face=e.x>ox?1:-1;
+      return;
+    }
     let p=grovePos(g);
     if(dist(e,p)<16){if(!tutorial)g.poison=(g.poison||0)+dt;if(g.poison>=POISON_TIME){witherGrove(g);dissipate(e)}return}  // the gas-bee lesson never costs a bed
     let ox=e.x;step(e,p,e.speed*(e.fanned>0?.3:1),dt);if(Math.abs(e.x-ox)>.01)e.face=e.x>ox?1:-1;
@@ -805,7 +818,7 @@ function dawn(day){
 const INTROS={
 ant:{name:'Ant',text:'Ants march straight for the hive.',how:'soldiers sting them',box:150},
 hornet:{name:'Hornet',text:'Hornets hunt your farmers.',how:'soldiers sting them',box:190},
-cloud:{name:'Pesticide',text:'It settles on flowers and kills them.',how:'only gas bees can clear it',box:240},
+cloud:{name:'Pesticide',text:'It drifts until it finds flowers, then kills them.',how:'only gas bees can clear it',box:240},
 bear:{name:'Bear',text:'Slow, tough and after your honey.',how:'send many soldiers at once',box:190},
 human:{name:'Bulldozer',text:'It paves everything in its path, for good.',how:'keep your bees out of its way',box:220}};
 const INTRO_FLIP=.3,INTRO_HOLD=2.6,INTRO_DARK=.35,INTRO_REVEAL=INTRO_HOLD+INTRO_DARK;  // seconds per flip-book drawing; when the last drawing starts fading to black; how long that fade takes
